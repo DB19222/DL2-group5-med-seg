@@ -4,12 +4,3 @@ monai[all]==0.9.0
 einops==0.6.1
 transformers==4.18.0
 escnn
-scipy
-lie_learn
-joblib
-torch-geometric
-pymanopt
-autograd
-py3nj
-escnn
-monai 
