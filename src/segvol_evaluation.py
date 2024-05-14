@@ -209,7 +209,7 @@ class Evaluator:
         logits_mask = self.model.forward_test(**arguments)
         dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
         print(dice.item())
-        
+
     
     def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox', 'point'], use_zoom=True):
         """ 
@@ -263,7 +263,8 @@ class Evaluator:
 
         print(self.categories)
         for item in loader:
-            self.inference(item['image'].squeeze(0), item['label'].squeeze(0))
+            ct, gt = item['image'].squeeze(0), item['label'].squeeze(0)
+            self.inference(ct, gt, prompts=prompts, use_zoom=use_zoom)
 
 
     def experiment_3(self, datasets=['0001'], prompts=[], use_zoom=True):
@@ -271,8 +272,8 @@ class Evaluator:
             Additionally, the authors discuss the generalization performance of SegVol by 
             applying it on an external MRI dataset (CHAOS).
 
-            NOTE : This dataset is contained as CT scan data, but not as MRI data. So if we want to perform this experiment, 
-            we would have to generate the dataset ourselves. 
+            NOTE : The huggingface dataset contains the CT data, but not the MRI data. So if we want to perform this experiment, 
+            we would have to pre-process the dataset ourselves. 
 
             Claims :
                 - "It achieves median Dice scores of 85.70%, 80.09%, 80.04%, and 81.46% for liver, spleen, left kidney, and right kidney, respectively."
