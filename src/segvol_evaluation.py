@@ -1,20 +1,13 @@
 from transformers import AutoModel, AutoTokenizer
 from lib.SegVol.data_utils import BatchedDistributedSampler, MinMaxNormalization, DimTranspose
-import math
 import os
 import numpy as np
 import torch
 from monai import data, transforms
-import itertools
-from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import Dataset, ConcatDataset
-import os
-import ast
 from scipy import sparse
-import random
-from scipy.ndimage import binary_opening, binary_closing
-from scipy.ndimage import label as label_structure
-from scipy.ndimage import sum as sum_structure
+import ast
+import os
 import json
 import json
 from monai import transforms
@@ -35,14 +28,26 @@ class UnionDataset(Dataset):
         return self.concat_dataset[idx]
 
 class SegVolDataset(Dataset):
-    def __init__(self, data_dir, data, transform, organ_list):
+    def __init__(self, data_dir, data, organ_list, transform):
         self.data = data
         self.data_dir = data_dir
         self.transform = transform
 
-        print(organ_list)
         organ_list.remove('background')
         self.target_list = organ_list
+    
+    def load_uniseg_case(self, ct_npy_path, gt_npy_path):
+        """ 
+            https://huggingface.co/BAAI/SegVol/blob/main/model_segvol_single.py
+        """
+        img_array = np.load(ct_npy_path)
+        allmatrix_sp= sparse.load_npz(gt_npy_path)
+        if 'mask_' in gt_npy_path:
+            gt_shape = ast.literal_eval(gt_npy_path.split('_')[-1].replace('.npz', ''))
+        else:
+            gt_shape = ast.literal_eval(gt_npy_path.split('.')[-2])
+        gt_array=allmatrix_sp.toarray().reshape(gt_shape)
+        return img_array, gt_array
 
     def __len__(self):
         return len(self.data)
@@ -52,7 +57,13 @@ class SegVolDataset(Dataset):
         item_dict = self.data[idx]
         ct_path, gt_path = os.path.join(self.data_dir, item_dict['image']), os.path.join(self.data_dir, item_dict['label'])
 
-        return ct_path, gt_path
+        ct_npy, gt_npy = self.load_uniseg_case(ct_path, gt_path)
+
+        item = {'image' : ct_npy, 'label' : gt_npy}
+        item = self.transform(item)
+
+        return  item
+    
     
 
 class Evaluator:
@@ -67,6 +78,7 @@ class Evaluator:
         self.model = AutoModel.from_pretrained("BAAI/SegVol", trust_remote_code=True, test_mode=True)
         self.model.model.text_encoder.tokenizer = self.clip_tokenizer
         self.model.to(device)
+        self.model.eval()
         print(device)
         print('model load done')
 
@@ -97,6 +109,7 @@ class Evaluator:
             '0023' : 'MSD-spleen',
             '0024' : 'LUNA16'
         }
+
     
     def build_concat_dataset(self, root_path, dataset_codes, transform):
         concat_dataset = []
@@ -108,7 +121,7 @@ class Evaluator:
 
             datalist = dataset_dict['test']
 
-            universal_ds = SegVolDataset(data_dir=root_path, data=datalist, transform=transform, organ_list=list(dataset_dict['labels'].values()))
+            universal_ds = SegVolDataset(data_dir=root_path, data=datalist, organ_list=list(dataset_dict['labels'].values()), transform=transform)
             concat_dataset.append(universal_ds)
             CombinationDataset_len += len(universal_ds)
 
@@ -120,21 +133,21 @@ class Evaluator:
 
     def get_test_loader(self, args):
         if args['randrotate']:
-            test_transform = transforms.Compose(
+            self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotate(range_x=180, range_y=180, range_z=180, prob=1.0)
+                    transforms.RandRotated(keys=["image", "label"], range_x=0, range_y=0, range_z=0, prob=1.0)
                 ]
             )
         else:
-            test_transform = transforms.Compose(
+            self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotate(range_x=180, range_y=180, range_z=180, prob=0.0)
+                   transforms.RandRotated(keys=["image", "label"], range_x=30, range_y=30, range_z=30, prob=0.0)
                 ]
             )
 
         print(f'----- test combination dataset -----')
 
-        combination_train_ds = self.build_concat_dataset(root_path=args['data_dir'], dataset_codes=args['dataset_codes'], transform=test_transform)
+        combination_train_ds = self.build_concat_dataset(root_path=args['data_dir'], dataset_codes=args['dataset_codes'], transform=self.test_transform)
 
         train_sampler = None 
 
@@ -148,10 +161,27 @@ class Evaluator:
             persistent_workers=True
         )
         return loader
-
-
     
-    def inference(self, ct_npy, gt_npy, cls_idx=0):
+    def dice_score(self, preds, labels, device='cpu'):
+        """"
+            https://huggingface.co/BAAI/SegVol/blob/main/model_segvol_single.py
+        """
+        assert preds.shape[0] == labels.shape[0], "predict & target batch size don't match\n" + str(preds.shape) + str(labels.shape)
+        predict = preds.reshape(1, -1).to(device)
+        target = labels.reshape(1, -1).to(device)
+
+        predict = torch.sigmoid(predict)
+        predict = torch.where(predict > 0.5, 1., 0.)
+        
+        tp = torch.sum(torch.mul(predict, target))
+        den = torch.sum(predict) + torch.sum(target) + 1
+        dice = 2 * tp / den
+        return dice
+
+    def inference(self, ct_npy, gt_npy, prompts=['text', 'bbox'], use_zoom=True, cls_idx=5):
+        if ('point' in prompts) and ('bbox' in prompts):
+            raise Exception('Point and bbox can not be used together!')
+            
         # go through zoom_transform to generate zoomout & zoomin views
         data_item = self.model.processor.zoom_transform(ct_npy, gt_npy)
 
@@ -159,35 +189,27 @@ class Evaluator:
         data_item['image'], data_item['label'], data_item['zoom_out_image'], data_item['zoom_out_label'] = \
         data_item['image'].unsqueeze(0).to(self.device), data_item['label'].unsqueeze(0).to(self.device), data_item['zoom_out_image'].unsqueeze(0).to(self.device), data_item['zoom_out_label'].unsqueeze(0).to(self.device)
 
-        # text prompt
+        # Create prompts
         text_prompt = [self.categories[cls_idx]]
-
-        # point prompt
         point_prompt, point_prompt_map = self.model.processor.point_prompt_b(data_item['zoom_out_label'][0][cls_idx], device=self.device)   # inputs w/o batch dim, outputs w batch dim
-
-        # bbox prompt
         bbox_prompt, bbox_prompt_map = self.model.processor.bbox_prompt_b(data_item['zoom_out_label'][0][cls_idx], device=self.device)   # inputs w/o batch dim, outputs w batch dim
 
-        print('prompt done')
-
-        # segvol test forward
-        # use_zoom: use zoom-out-zoom-in
-        # point_prompt_group: use point prompt
-        # bbox_prompt_group: use bbox prompt
-        # text_prompt: use text prompt
-        logits_mask = self.model.forward_test(image=data_item['image'],
-            zoomed_image=data_item['zoom_out_image'],
-            # point_prompt_group=[point_prompt, point_prompt_map],
-            # bbox_prompt_group=[bbox_prompt, bbox_prompt_map],
-            text_prompt=text_prompt,
-            use_zoom=True
-            )
-
-        # cal dice score
-        dice = self.model.processor.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
-        print(dice)
-
-
+        # Create argument dict
+        arguments = dict()
+        arguments['image'] = data_item['image']
+        arguments['zoomed_image'] = data_item['zoom_out_image']
+        arguments['use_zoom'] = use_zoom
+        if 'text' in prompts:
+            arguments['text_prompt'] = text_prompt
+        if 'bbox' in prompts:
+            arguments['bbox_prompt_group'] = [bbox_prompt, bbox_prompt_map]
+        if 'point' in prompts:
+            arguments['point_prompt_group'] = [point_prompt, point_prompt_map]
+        
+        logits_mask = self.model.forward_test(**arguments)
+        dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
+        print(dice.item())
+        
     
     def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox', 'point'], use_zoom=True):
         """ 
@@ -240,12 +262,8 @@ class Evaluator:
         loader = self.get_test_loader(args)
 
         print(self.categories)
-        for batch in loader:
-            ct, gt = batch 
-            print(ct, gt)
-            ct_npy, gt_npy = self.model.processor.load_uniseg_case(ct[0], gt[0])
-
-            self.inference(ct_npy, gt_npy)
+        for item in loader:
+            self.inference(item['image'].squeeze(0), item['label'].squeeze(0))
 
 
     def experiment_3(self, datasets=['0001'], prompts=[], use_zoom=True):

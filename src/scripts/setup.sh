@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT=$(pwd | sed 's/\/src/scripts$//')
+ROOT=$(pwd | sed 's/\/src/scripts$/')
 cd "$ROOT"
 
 # create virtual environment
