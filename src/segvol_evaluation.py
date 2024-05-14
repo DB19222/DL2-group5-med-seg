@@ -67,7 +67,14 @@ class SegVolDataset(Dataset):
     
 
 class Evaluator:
+    """ 
+        Experiments class that streamlines the inference and experimentation process.
 
+        Setup an experiment as a function, define the dataset codes that are used in the experiment,
+        define the type of prompts you want to use, and TODO : the organs to be used. 
+
+        TODO : Save results, interpret results, implement experiments from paper.  
+    """
     def __init__(self):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -135,7 +142,7 @@ class Evaluator:
         if args['randrotate']:
             self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotated(keys=["image", "label"], range_x=0, range_y=0, range_z=0, prob=1.0)
+                    transforms.RandRotated(keys=["image", "label"], range_x=45, range_y=45, range_z=45, prob=1.0)
                 ]
             )
         else:
@@ -231,12 +238,10 @@ class Evaluator:
             \cite{du2024}
 
         """
-
-        # dice = self.model.processor.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], device)
-                    
+        pass         
 
     
-    def experiment_2(self, datasets=['0002'], prompts=['text', 'bbox'], use_zoom=True):
+    def experiment_2(self, datasets=['0002'], prompts=['text', 'point'], use_zoom=True):
         """ 
             External validation experiment where SegVol is compared with interactive methods such as SAMMED-3D
 
