@@ -142,7 +142,7 @@ class Evaluator:
         if args['randrotate']:
             self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotated(keys=["image", "label"], range_x=45, range_y=45, range_z=45, prob=1.0)
+                    transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
                 ]
             )
         else:
@@ -164,8 +164,8 @@ class Evaluator:
             shuffle=(train_sampler is None),
             num_workers=1,
             sampler=train_sampler,
-            pin_memory=True,
-            persistent_workers=True
+            pin_memory=False,
+            persistent_workers=False
         )
         return loader
     
@@ -188,7 +188,7 @@ class Evaluator:
     def inference(self, ct_npy, gt_npy, prompts=['text', 'bbox'], use_zoom=True, cls_idx=5):
         if ('point' in prompts) and ('bbox' in prompts):
             raise Exception('Point and bbox can not be used together!')
-            
+        
         # go through zoom_transform to generate zoomout & zoomin views
         data_item = self.model.processor.zoom_transform(ct_npy, gt_npy)
 
@@ -214,11 +214,12 @@ class Evaluator:
             arguments['point_prompt_group'] = [point_prompt, point_prompt_map]
         
         logits_mask = self.model.forward_test(**arguments)
+        print(data_item['label'].shape)
         dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
         print(dice.item())
 
     
-    def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox', 'point'], use_zoom=True):
+    def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox'], use_zoom=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -238,10 +239,10 @@ class Evaluator:
             \cite{du2024}
 
         """
-        pass         
+                 
 
     
-    def experiment_2(self, datasets=['0002'], prompts=['text', 'point'], use_zoom=True):
+    def experiment_2(self, datasets=['0014'], prompts=['text', 'point'], use_zoom=True):
         """ 
             External validation experiment where SegVol is compared with interactive methods such as SAMMED-3D
 
@@ -261,15 +262,38 @@ class Evaluator:
         args = {
             'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
             'dataset_codes' : datasets,
-            'randrotate' : True
-
+            'randrotate' : False
         }
         loader = self.get_test_loader(args)
 
         print(self.categories)
         for item in loader:
-            ct, gt = item['image'].squeeze(0), item['label'].squeeze(0)
-            self.inference(ct, gt, prompts=prompts, use_zoom=use_zoom)
+            ct, gt = item['image'], item['label']
+            print(ct.squeeze(0).shape, gt.squeeze(0).shape)
+            self.inference(ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom)
+
+        # for dataset in datasets:
+        #     data_path = os.path.join(os.curdir, 'data', 'datasets', dataset, f'{dataset}.json')
+        #     with open(data_path, 'r') as rf:
+        #         data_json = json.loads(rf.read())
+
+        #     test_data = data_json['test']
+
+        #     dataset_path = os.path.join(os.curdir, 'data', 'datasets')
+        #     for item in test_data:
+        #         ct_path = os.path.join(dataset_path, item['image'])
+        #         gt_path = os.path.join(dataset_path, item['label'])
+
+        #         categories_dict = data_json['labels']
+        #         self.categories = [x for _, x in categories_dict.items() if x != "background"]
+
+        #         ct_npy, gt_npy = self.model.processor.load_uniseg_case(ct_path, gt_path)
+
+        #         self.inference(ct_npy, gt_npy)
+
+
+            
+
 
 
     def experiment_3(self, datasets=['0001'], prompts=[], use_zoom=True):
