@@ -20,6 +20,7 @@ class UnionDataset(Dataset):
         self.lengths = [len(d) for d in datasets]
         self.offsets = torch.cumsum(torch.tensor([0] + self.lengths), dim=0)
         self.concat_dataset = concat_dataset
+
         
     def __len__(self):
         return sum(self.lengths)
@@ -242,7 +243,7 @@ class Evaluator:
                  
 
     
-    def experiment_2(self, datasets=['0014'], prompts=['text', 'point'], use_zoom=True):
+    def experiment_2(self, datasets=['0002'], prompts=['text', 'point'], use_zoom=True):
         """ 
             External validation experiment where SegVol is compared with interactive methods such as SAMMED-3D
 
@@ -259,18 +260,20 @@ class Evaluator:
 
         """
 
-        args = {
-            'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
-            'dataset_codes' : datasets,
-            'randrotate' : False
-        }
-        loader = self.get_test_loader(args)
+        for code in datasets:
+            args = {
+                'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
+                'dataset_codes' : [code],
+                'randrotate' : False
+            }
+            loader = self.get_test_loader(args)
 
-        print(self.categories)
-        for item in loader:
-            ct, gt = item['image'], item['label']
-            print(ct.squeeze(0).shape, gt.squeeze(0).shape)
-            self.inference(ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom)
+            organ_to_idx = {organ:idx for idx, organ in enumerate(self.categories)}
+
+            for item in loader:
+                ct, gt = item['image'], item['label']
+                print(ct.squeeze(0).shape, gt.squeeze(0).shape)
+                self.inference(ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx['liver'])
 
         # for dataset in datasets:
         #     data_path = os.path.join(os.curdir, 'data', 'datasets', dataset, f'{dataset}.json')
