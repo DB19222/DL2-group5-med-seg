@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus=1
+
+#SBATCH --job-name=HyperparamSearchLR
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=00:59:00
+#SBATCH --array=1-12%1
+#SBATCH --output=/home/$(whoami)/DL2-group5-med-seg/%A.out
+
+date
+
+WORK_DIR=$HOME/DL2-group5-med-seg
+DATA_DIR=$HOME/{path_to_data}
+cd $WORK_DIR
+
+JOB_FILE=$WORK_DIR/src/scripts/hyperparam_search.job
+HPARAMS_FILE=$WORK_DIR/src/scripts/array_job_hyperparameters.txt
+CHECKPOINTDIR=$WORK_DIR/logs/array_job_${SLURM_ARRAY_JOB_ID}
+
+mkdir $CHECKPOINTDIR
+rsync $HPARAMS_FILE $CHECKPOINTDIR/
+rsync $JOB_FILE $CHECKPOINTDIR/
+
+module load 2023
+module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
+source $WORK_DIR/.venv/bin/activate
+
+TOKENIZERS_PARALLELISM=false python -m src.segvol_evaluation \
+                                    --output_dir $CHECKPOINTDIR/experiment_${SLURM_ARRAY_TASK_ID} \
+                                    $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
