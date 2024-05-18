@@ -13,6 +13,29 @@ import json
 from monai import transforms
 import os
 import torch 
+import pandas as pd
+import random
+import time
+import argparse
+
+def set_parse():
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("--dataset_code", type = str, default='0002')
+    parser.add_argument("--output_dir", type = str, default='./')
+    parser.add_argument("--prompts", type = list, default=['point', 'text'])
+    parser.add_argument("--seed", type = int, default=42)
+    parser.add_argument("--randrotate", type = bool, default=False)
+    parser.add_argument("--use_zoom", type = bool, default=True)
+    parser.add_argument("--data_dir", type= str, default='./data/datasets')
+    
+    args = parser.parse_args()
+    return args
+
+def seed_all(seed=42):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
 
 class UnionDataset(Dataset):
     def __init__(self, concat_dataset, datasets):
@@ -143,13 +166,15 @@ class Evaluator:
         if args['randrotate']:
             self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
+                    #transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
+                    transforms.Rotated(keys=["image", "label"], angle=(0.1, 0.1, 0.785398163))
                 ]
             )
         else:
             self.test_transform = transforms.Compose(
                 [
-                   transforms.RandRotated(keys=["image", "label"], range_x=30, range_y=30, range_z=30, prob=0.0)
+                   #transforms.RandRotated(keys=["image", "label"], range_x=30, range_y=30, range_z=30, prob=0.0)
+                   transforms.Rotated(keys=["image", "label"], angle=(0.0, 0.0, 0.0))
                 ]
             )
 
@@ -215,9 +240,33 @@ class Evaluator:
             arguments['point_prompt_group'] = [point_prompt, point_prompt_map]
         
         logits_mask = self.model.forward_test(**arguments)
-        print(data_item['label'].shape)
         dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
-        print(dice.item())
+        print(dice)
+        return dice
+    
+    def run_dataset(self, args):
+        arguments = {
+                'data_dir' : args.data_dir,
+                'dataset_codes' : [args.dataset_code],
+                'randrotate' : args.randrotate
+            }
+        loader = self.get_test_loader(arguments)
+
+        organ_to_idx = {organ:idx for idx, organ in enumerate(self.categories)}
+
+        result_frame = pd.DataFrame(columns=['dataset', 'organ', 'dice', 'randrotate', 'prompts'])
+
+        idx = 0
+        for item in loader:
+            ct, gt = item['image'], item['label']
+            for organ in organ_to_idx.keys():
+                dice = self.inference(ct.squeeze(0), gt.squeeze(0), prompts=args.prompts, use_zoom=args.use_zoom, cls_idx=organ_to_idx[organ])
+                result_frame.loc[idx] = [args.dataset_code, organ, dice, args.randrotate, ''.join(args.prompts)]
+                idx += 1
+        
+        result_frame.to_csv(os.path.join(args.output_dir, f'{args.dataset_code}_{args.seed}_{args.randrotate}.csv'), index=False)
+
+                
 
     
     def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox'], use_zoom=True):
@@ -264,7 +313,7 @@ class Evaluator:
             args = {
                 'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
                 'dataset_codes' : [code],
-                'randrotate' : False
+                'randrotate' : True
             }
             loader = self.get_test_loader(args)
 
@@ -363,8 +412,14 @@ class Evaluator:
 
 
 def main():
+    args = set_parse()
+    seed_all(args.seed)
+
+    start = time.time()
     eval = Evaluator()
-    eval.experiment_2()
+    eval.run_dataset(args)
+    
+    print(f'Evaluation on dataset {args.dataset_code} done. Took {time.time()-start} seconds.')
 
 
 if __name__ == '__main__':
