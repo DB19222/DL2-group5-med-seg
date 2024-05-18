@@ -30,5 +30,8 @@ source $WORK_DIR/.venv/bin/activate
 
 TOKENIZERS_PARALLELISM=false python -m src.segvol_evaluation \
                                     --output_dir $CHECKPOINTDIR/experiment_${SLURM_ARRAY_TASK_ID} \
+<<<<<<< HEAD
                                     --data_dir $DATA_DIR \
+=======
+>>>>>>> 47c478c (added job files for snellius)
                                     $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
