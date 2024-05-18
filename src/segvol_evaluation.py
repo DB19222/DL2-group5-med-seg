@@ -143,13 +143,15 @@ class Evaluator:
         if args['randrotate']:
             self.test_transform = transforms.Compose(
                 [
-                    transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
+                    #transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
+                    transforms.Rotated(keys=["image", "label"], angle=(0.1, 0.1, 0.785398163))
                 ]
             )
         else:
             self.test_transform = transforms.Compose(
                 [
-                   transforms.RandRotated(keys=["image", "label"], range_x=30, range_y=30, range_z=30, prob=0.0)
+                   #transforms.RandRotated(keys=["image", "label"], range_x=30, range_y=30, range_z=30, prob=0.0)
+                   transforms.Rotated(keys=["image", "label"], angle=(0.0, 0.0, 0.0))
                 ]
             )
 
@@ -264,7 +266,7 @@ class Evaluator:
             args = {
                 'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
                 'dataset_codes' : [code],
-                'randrotate' : False
+                'randrotate' : True
             }
             loader = self.get_test_loader(args)
 
