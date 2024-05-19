@@ -18,6 +18,11 @@ import random
 import time
 import argparse
 
+from datasets import load_dataset
+import os
+
+dataset = load_dataset("GoodBaiBai88/M3D-Seg", cache_dir=os.environ("TMPDIR"))
+
 def set_parse():
     parser = argparse.ArgumentParser()
     
