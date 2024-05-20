@@ -53,10 +53,9 @@ A key innovation this work contributes, is the zoom-out-zoom-in mechanism. A cri
 ### Evaluation Metrics
 
 To evaluate, the original authors employ the Dice Similarity Coefficient (Dice score) to evaluate the model’s performance. The Dice score is defined as:
+
 $$
-\begin{align} 
 \text{Dice Score} = \frac{2|X \cap Y|}{|X| + |Y|}
-\end{align}
 $$
 
 In this equation, |X ∩ Y| represents the cardinality of the intersection between the predicted segmentation set X and the ground truth set Y. The terms |X| and |Y| refer to the cardinalities of the sets X and Y, respectively. The Dice score is a widely used metric in image segmentation tasks, as it quantifies the similarity between the predicted and true segmentations. This makes it particularly effective for assessing the degree of overlap in binary segmentation results.
