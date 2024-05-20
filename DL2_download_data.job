@@ -22,6 +22,17 @@ module load CUDA/11.7.0
 # load GCC compiler with required version
 module load GCC/11.3.0
 
+# Install Git-LFS
+if ! command -v git-lfs &> /dev/null
+then
+    echo "Git-LFS not found, installing..."
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+    sudo apt-get install git-lfs
+fi
+
+# Initialize Git-LFS
+git lfs install
+
 # activate the environment
 source venv/bin/activate
 
