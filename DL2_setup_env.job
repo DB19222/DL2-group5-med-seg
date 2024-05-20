@@ -40,5 +40,7 @@ source venv/bin/activate
 ROOT=$HOME/DL2/DL2-group5-med-seg
 cd "$ROOT"
 
+pip install --upgrade pip
+
 # install dependencies
 pip install -r "$ROOT/requirements.txt"
