@@ -9,7 +9,8 @@
 #SBATCH --output=DL2_inference_log.out
 
 # activate the environment
-source venv/bin/activate
+source ../venv/bin/activate
 
+# Where is the main.py?
 ### run SegVol
 python main.py --config configs/text.yaml prompt="$prompt" save_path=$save_path

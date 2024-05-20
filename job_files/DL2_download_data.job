@@ -23,7 +23,7 @@ module load CUDA/11.7.0
 module load GCC/11.3.0
 
 # activate the environment
-source venv/bin/activate
+source ../venv/bin/activate
 
 # install dependencies
-python src/download_dataset.py
+python ../src/download_dataset.py
