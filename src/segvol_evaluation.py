@@ -413,9 +413,6 @@ class Evaluator:
         """
         pass
 
-
-
-
 def main():
     args = set_parse()
     seed_all(args.seed)

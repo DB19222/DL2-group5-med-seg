@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus=1
+#SBATCH --job-name=unzip_data_zip
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=02:00:00
+#SBATCH --output=output_unzip_data_zip_%A.out
+
+
+unzip ../src/data/data.zip -d ../src/data/

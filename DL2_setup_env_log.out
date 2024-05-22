@@ -1,0 +1,299 @@
+=========================================================================================== 
+Warning! Due to the issue with the current installation of setuptools_scm in
+the 2023 software 
+environment, we need to rebuild the following packages:
+  hatchling, Python-bundle-PyPI, and Python
+
+The rebuild is scheduled for Thursday 23.05.2024 at 09:00 and will last for
+approx. 30 minutes. During 
+this period, the above mentioned packages will be unavailable. You can read
+more about the issue 
+following this link:
+https://github.com/easybuilders/easybuild-easyconfigs/issues/19849 
+We are sorry for any inconvenience.
+
+In case of any questions, please reach us out by submitting a ServiceDesk
+ticket: 
+https://servicedesk.surf.nl
+============================================================================================== 
+created virtual environment CPython3.10.4.final.0-64 in 1827ms
+  creator CPython3Posix(dest=/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/venv, clear=False, no_vcs_ignore=False, global=False)
+  seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/gpfs/home5/scur1193/.local/share/virtualenv)
+    added seed packages: pip==24.0, setuptools==69.5.1, wheel==0.43.0
+  activators BashActivator,CShellActivator,FishActivator,NushellActivator,PowerShellActivator,PythonActivator
+Requirement already satisfied: pip in ./venv/lib/python3.10/site-packages (24.0)
+Collecting monai==0.9.0 (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 1))
+  Using cached monai-0.9.0-202206131636-py3-none-any.whl.metadata (7.3 kB)
+Collecting einops==0.6.1 (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 2))
+  Using cached einops-0.6.1-py3-none-any.whl.metadata (12 kB)
+Collecting transformers==4.18.0 (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached transformers-4.18.0-py3-none-any.whl.metadata (70 kB)
+Collecting matplotlib (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached matplotlib-3.9.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+Collecting torch (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached torch-2.3.0-cp310-cp310-manylinux1_x86_64.whl.metadata (26 kB)
+Collecting tqdm (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 6))
+  Using cached tqdm-4.66.4-py3-none-any.whl.metadata (57 kB)
+Collecting scipy (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 7))
+  Using cached scipy-1.13.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+Collecting nibabel (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 8))
+  Using cached nibabel-5.2.1-py3-none-any.whl.metadata (8.8 kB)
+Collecting datasets (from -r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached datasets-2.19.1-py3-none-any.whl.metadata (19 kB)
+Collecting numpy>=1.17 (from monai==0.9.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 1))
+  Using cached numpy-1.26.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+Collecting filelock (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached filelock-3.14.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting huggingface-hub<1.0,>=0.1.0 (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached huggingface_hub-0.23.0-py3-none-any.whl.metadata (12 kB)
+Collecting packaging>=20.0 (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached packaging-24.0-py3-none-any.whl.metadata (3.2 kB)
+Collecting pyyaml>=5.1 (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached PyYAML-6.0.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+Collecting regex!=2019.12.17 (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached regex-2024.5.15-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (40 kB)
+Collecting requests (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached requests-2.31.0-py3-none-any.whl.metadata (4.6 kB)
+Collecting sacremoses (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached sacremoses-0.1.1-py3-none-any.whl.metadata (8.3 kB)
+Collecting tokenizers!=0.11.3,<0.13,>=0.11.1 (from transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Using cached tokenizers-0.12.1-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (6.5 kB)
+Collecting contourpy>=1.0.1 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached contourpy-1.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.8 kB)
+Collecting cycler>=0.10 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.22.0 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached fonttools-4.51.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (159 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached kiwisolver-1.4.5-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (6.4 kB)
+Collecting pillow>=8 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached pillow-10.3.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (9.2 kB)
+Collecting pyparsing>=2.3.1 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached pyparsing-3.1.2-py3-none-any.whl.metadata (5.1 kB)
+Collecting python-dateutil>=2.7 (from matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting typing-extensions>=4.8.0 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached typing_extensions-4.11.0-py3-none-any.whl.metadata (3.0 kB)
+Collecting sympy (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached sympy-1.12-py3-none-any.whl.metadata (12 kB)
+Collecting networkx (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached networkx-3.3-py3-none-any.whl.metadata (5.1 kB)
+Collecting jinja2 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached jinja2-3.1.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting fsspec (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached fsspec-2024.5.0-py3-none-any.whl.metadata (11 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.1.105 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cuda_nvrtc_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-runtime-cu12==12.1.105 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cuda_runtime_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-cupti-cu12==12.1.105 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cuda_cupti_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cudnn-cu12==8.9.2.26 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cudnn_cu12-8.9.2.26-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cublas-cu12==12.1.3.1 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cublas_cu12-12.1.3.1-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cufft-cu12==11.0.2.54 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cufft_cu12-11.0.2.54-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-curand-cu12==10.3.2.106 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_curand_cu12-10.3.2.106-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cusolver-cu12==11.4.5.107 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cusolver_cu12-11.4.5.107-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cusparse-cu12==12.1.0.106 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_cusparse_cu12-12.1.0.106-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-nccl-cu12==2.20.5 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_nccl_cu12-2.20.5-py3-none-manylinux2014_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvtx-cu12==12.1.105 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_nvtx_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.7 kB)
+Collecting triton==2.3.0 (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached triton-2.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+Collecting nvidia-nvjitlink-cu12 (from nvidia-cusolver-cu12==11.4.5.107->torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting pyarrow>=12.0.0 (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Collecting pyarrow-hotfix (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached pyarrow_hotfix-0.6-py3-none-any.whl.metadata (3.6 kB)
+Collecting dill<0.3.9,>=0.3.0 (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached dill-0.3.8-py3-none-any.whl.metadata (10 kB)
+Collecting pandas (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (19 kB)
+Collecting xxhash (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached xxhash-3.4.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting multiprocess (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached multiprocess-0.70.16-py310-none-any.whl.metadata (7.2 kB)
+Collecting fsspec (from torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Using cached fsspec-2024.3.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting aiohttp (from datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached aiohttp-3.9.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.5 kB)
+Collecting aiosignal>=1.1.2 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached aiosignal-1.3.1-py3-none-any.whl.metadata (4.0 kB)
+Collecting attrs>=17.3.0 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached attrs-23.2.0-py3-none-any.whl.metadata (9.5 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached frozenlist-1.4.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Downloading multidict-6.0.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Collecting yarl<2.0,>=1.0 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Downloading yarl-1.9.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (31 kB)
+Collecting async-timeout<5.0,>=4.0 (from aiohttp->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Using cached async_timeout-4.0.3-py3-none-any.whl.metadata (4.2 kB)
+Collecting six>=1.5 (from python-dateutil>=2.7->matplotlib->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 4))
+  Downloading six-1.16.0-py2.py3-none-any.whl.metadata (1.8 kB)
+Collecting charset-normalizer<4,>=2 (from requests->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading charset_normalizer-3.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (33 kB)
+Collecting idna<4,>=2.5 (from requests->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading idna-3.7-py3-none-any.whl.metadata (9.9 kB)
+Collecting urllib3<3,>=1.21.1 (from requests->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading urllib3-2.2.1-py3-none-any.whl.metadata (6.4 kB)
+Collecting certifi>=2017.4.17 (from requests->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading certifi-2024.2.2-py3-none-any.whl.metadata (2.2 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Downloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.0 kB)
+Collecting pytz>=2020.1 (from pandas->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Downloading pytz-2024.1-py2.py3-none-any.whl.metadata (22 kB)
+Collecting tzdata>=2022.7 (from pandas->datasets->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 9))
+  Downloading tzdata-2024.1-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting click (from sacremoses->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading click-8.1.7-py3-none-any.whl.metadata (3.0 kB)
+Collecting joblib (from sacremoses->transformers==4.18.0->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 3))
+  Downloading joblib-1.4.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting mpmath>=0.19 (from sympy->torch->-r /home/scur1193/DL2/DL2-group5-med-seg/requirements.txt (line 5))
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Using cached monai-0.9.0-202206131636-py3-none-any.whl (939 kB)
+Using cached einops-0.6.1-py3-none-any.whl (42 kB)
+Using cached transformers-4.18.0-py3-none-any.whl (4.0 MB)
+Downloading matplotlib-3.9.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 31.2 MB/s eta 0:00:00
+Downloading torch-2.3.0-cp310-cp310-manylinux1_x86_64.whl (779.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 779.1/779.1 MB 3.1 MB/s eta 0:00:00
+Downloading nvidia_cublas_cu12-12.1.3.1-py3-none-manylinux1_x86_64.whl (410.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 410.6/410.6 MB 6.0 MB/s eta 0:00:00
+Downloading nvidia_cuda_cupti_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (14.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14.1/14.1 MB 83.1 MB/s eta 0:00:00
+Downloading nvidia_cuda_nvrtc_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (23.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.7/23.7 MB 33.3 MB/s eta 0:00:00
+Downloading nvidia_cuda_runtime_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (823 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 823.6/823.6 kB 41.7 MB/s eta 0:00:00
+Downloading nvidia_cudnn_cu12-8.9.2.26-py3-none-manylinux1_x86_64.whl (731.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 731.7/731.7 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_cufft_cu12-11.0.2.54-py3-none-manylinux1_x86_64.whl (121.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 121.6/121.6 MB 18.9 MB/s eta 0:00:00
+Downloading nvidia_curand_cu12-10.3.2.106-py3-none-manylinux1_x86_64.whl (56.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 MB 34.5 MB/s eta 0:00:00
+Downloading nvidia_cusolver_cu12-11.4.5.107-py3-none-manylinux1_x86_64.whl (124.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 124.2/124.2 MB 18.7 MB/s eta 0:00:00
+Downloading nvidia_cusparse_cu12-12.1.0.106-py3-none-manylinux1_x86_64.whl (196.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.0/196.0 MB 12.8 MB/s eta 0:00:00
+Downloading nvidia_nccl_cu12-2.20.5-py3-none-manylinux2014_x86_64.whl (176.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 176.2/176.2 MB 10.1 MB/s eta 0:00:00
+Downloading nvidia_nvtx_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (99 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 99.1/99.1 kB 10.0 MB/s eta 0:00:00
+Downloading triton-2.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (168.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 168.1/168.1 MB 13.2 MB/s eta 0:00:00
+Using cached tqdm-4.66.4-py3-none-any.whl (78 kB)
+Downloading scipy-1.13.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (38.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 38.6/38.6 MB 37.4 MB/s eta 0:00:00
+Using cached nibabel-5.2.1-py3-none-any.whl (3.3 MB)
+Using cached datasets-2.19.1-py3-none-any.whl (542 kB)
+Downloading contourpy-1.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (305 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 305.2/305.2 kB 27.3 MB/s eta 0:00:00
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached dill-0.3.8-py3-none-any.whl (116 kB)
+Downloading fonttools-4.51.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 84.1 MB/s eta 0:00:00
+Downloading fsspec-2024.3.1-py3-none-any.whl (171 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 172.0/172.0 kB 16.6 MB/s eta 0:00:00
+Downloading aiohttp-3.9.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 53.3 MB/s eta 0:00:00
+Using cached huggingface_hub-0.23.0-py3-none-any.whl (401 kB)
+Downloading kiwisolver-1.4.5-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 13.0 MB/s eta 0:00:00
+Downloading numpy-1.26.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.2/18.2 MB 33.1 MB/s eta 0:00:00
+Downloading packaging-24.0-py3-none-any.whl (53 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.5/53.5 kB 5.2 MB/s eta 0:00:00
+Downloading pillow-10.3.0-cp310-cp310-manylinux_2_28_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 67.1 MB/s eta 0:00:00
+Downloading pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl (40.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.8/40.8 MB 20.3 MB/s eta 0:00:00
+Downloading pyparsing-3.1.2-py3-none-any.whl (103 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.2/103.2 kB 11.3 MB/s eta 0:00:00
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 229.9/229.9 kB 21.8 MB/s eta 0:00:00
+Downloading PyYAML-6.0.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (705 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 705.5/705.5 kB 39.3 MB/s eta 0:00:00
+Downloading regex-2024.5.15-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (775 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 775.1/775.1 kB 38.3 MB/s eta 0:00:00
+Downloading requests-2.31.0-py3-none-any.whl (62 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.6/62.6 kB 6.1 MB/s eta 0:00:00
+Downloading tokenizers-0.12.1-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (6.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 82.8 MB/s eta 0:00:00
+Downloading typing_extensions-4.11.0-py3-none-any.whl (34 kB)
+Downloading filelock-3.14.0-py3-none-any.whl (12 kB)
+Downloading jinja2-3.1.4-py3-none-any.whl (133 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 133.3/133.3 kB 13.0 MB/s eta 0:00:00
+Downloading multiprocess-0.70.16-py310-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.8/134.8 kB 14.2 MB/s eta 0:00:00
+Downloading networkx-3.3-py3-none-any.whl (1.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 54.7 MB/s eta 0:00:00
+Downloading pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.0/13.0 MB 78.1 MB/s eta 0:00:00
+Using cached pyarrow_hotfix-0.6-py3-none-any.whl (7.9 kB)
+Using cached sacremoses-0.1.1-py3-none-any.whl (897 kB)
+Downloading sympy-1.12-py3-none-any.whl (5.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.7/5.7 MB 86.2 MB/s eta 0:00:00
+Downloading xxhash-3.4.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (194 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 194.1/194.1 kB 19.2 MB/s eta 0:00:00
+Using cached aiosignal-1.3.1-py3-none-any.whl (7.6 kB)
+Using cached async_timeout-4.0.3-py3-none-any.whl (5.7 kB)
+Downloading attrs-23.2.0-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.8/60.8 kB 5.4 MB/s eta 0:00:00
+Downloading certifi-2024.2.2-py3-none-any.whl (163 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 163.8/163.8 kB 16.2 MB/s eta 0:00:00
+Downloading charset_normalizer-3.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (142 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 142.1/142.1 kB 14.7 MB/s eta 0:00:00
+Downloading frozenlist-1.4.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (239 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 239.5/239.5 kB 20.1 MB/s eta 0:00:00
+Downloading idna-3.7-py3-none-any.whl (66 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 66.8/66.8 kB 6.9 MB/s eta 0:00:00
+Downloading MarkupSafe-2.1.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (25 kB)
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 35.7 MB/s eta 0:00:00
+Downloading multidict-6.0.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (124 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 124.3/124.3 kB 11.8 MB/s eta 0:00:00
+Downloading pytz-2024.1-py2.py3-none-any.whl (505 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 505.5/505.5 kB 2.8 MB/s eta 0:00:00
+Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
+Downloading tzdata-2024.1-py2.py3-none-any.whl (345 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 345.4/345.4 kB 23.2 MB/s eta 0:00:00
+Downloading urllib3-2.2.1-py3-none-any.whl (121 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 121.1/121.1 kB 11.0 MB/s eta 0:00:00
+Downloading yarl-1.9.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (301 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 301.6/301.6 kB 24.4 MB/s eta 0:00:00
+Downloading click-8.1.7-py3-none-any.whl (97 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 97.9/97.9 kB 9.2 MB/s eta 0:00:00
+Downloading joblib-1.4.2-py3-none-any.whl (301 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 301.8/301.8 kB 25.3 MB/s eta 0:00:00
+Downloading nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (21.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.1/21.1 MB 37.7 MB/s eta 0:00:00
+Installing collected packages: tokenizers, pytz, mpmath, xxhash, urllib3, tzdata, typing-extensions, tqdm, sympy, six, regex, pyyaml, pyparsing, pyarrow-hotfix, pillow, packaging, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, multidict, MarkupSafe, kiwisolver, joblib, idna, fsspec, frozenlist, fonttools, filelock, einops, dill, cycler, click, charset-normalizer, certifi, attrs, async-timeout, yarl, triton, scipy, sacremoses, requests, python-dateutil, pyarrow, nvidia-cusparse-cu12, nvidia-cudnn-cu12, nibabel, multiprocess, jinja2, contourpy, aiosignal, pandas, nvidia-cusolver-cu12, matplotlib, huggingface-hub, aiohttp, transformers, torch, monai, datasets
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+argon2-cffi 20.1.0 requires cffi>=1.0.0, which is not installed.
+bleach 5.0.1 requires webencodings, which is not installed.
+ipykernel 6.13.0 requires psutil, which is not installed.
+jupyter-packaging 0.12.0 requires tomlkit, which is not installed.
+nbconvert 6.5.3 requires pygments>=2.4.1, which is not installed.
+Successfully installed MarkupSafe-2.1.5 aiohttp-3.9.5 aiosignal-1.3.1 async-timeout-4.0.3 attrs-23.2.0 certifi-2024.2.2 charset-normalizer-3.3.2 click-8.1.7 contourpy-1.2.1 cycler-0.12.1 datasets-2.19.1 dill-0.3.8 einops-0.6.1 filelock-3.14.0 fonttools-4.51.0 frozenlist-1.4.1 fsspec-2024.3.1 huggingface-hub-0.23.0 idna-3.7 jinja2-3.1.4 joblib-1.4.2 kiwisolver-1.4.5 matplotlib-3.9.0 monai-0.9.0 mpmath-1.3.0 multidict-6.0.5 multiprocess-0.70.16 networkx-3.3 nibabel-5.2.1 numpy-1.26.4 nvidia-cublas-cu12-12.1.3.1 nvidia-cuda-cupti-cu12-12.1.105 nvidia-cuda-nvrtc-cu12-12.1.105 nvidia-cuda-runtime-cu12-12.1.105 nvidia-cudnn-cu12-8.9.2.26 nvidia-cufft-cu12-11.0.2.54 nvidia-curand-cu12-10.3.2.106 nvidia-cusolver-cu12-11.4.5.107 nvidia-cusparse-cu12-12.1.0.106 nvidia-nccl-cu12-2.20.5 nvidia-nvjitlink-cu12-12.4.127 nvidia-nvtx-cu12-12.1.105 packaging-24.0 pandas-2.2.2 pillow-10.3.0 pyarrow-16.1.0 pyarrow-hotfix-0.6 pyparsing-3.1.2 python-dateutil-2.9.0.post0 pytz-2024.1 pyyaml-6.0.1 regex-2024.5.15 requests-2.31.0 sacremoses-0.1.1 scipy-1.13.0 six-1.16.0 sympy-1.12 tokenizers-0.12.1 torch-2.3.0 tqdm-4.66.4 transformers-4.18.0 triton-2.3.0 typing-extensions-4.11.0 tzdata-2024.1 urllib3-2.2.1 xxhash-3.4.1 yarl-1.9.4
+
+JOB STATISTICS
+==============
+Job ID: 6301252
+Cluster: snellius
+User/Group: scur1193/scur1193
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:04:01
+CPU Efficiency: 4.59% of 01:27:36 core-walltime
+Job Wall-clock time: 00:04:52
+Memory Utilized: 191.18 MB
+Memory Efficiency: 0.16% of 120.00 GB
