@@ -6,11 +6,13 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=00:59:00
-#SBATCH --output=DL2_setup_env_log.out
-
+#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/output_%A.out
+#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/output_%A.err
 
 # load modules
+date 
 
+module purge
 # general module, other modules require this
 module load 2022
 
@@ -23,6 +25,7 @@ module load CUDA/11.7.0
 # load GCC compiler with required version
 module load GCC/11.3.0
 
+
 # note that, this installs CUDA version 11.7.0, thus packages that require
 # a specific version (i.e. torch) will need to install a version that matches the 
 # CUDA toolkit. Likewise, this script installs Python version 3.10.4
@@ -31,14 +34,22 @@ module load GCC/11.3.0
 # module load IPython/8.14.0-GCCcore-12.3.0
 # module load CUDA/12.1.1
 
+pwd 
+
 # create virtual environment
-virtualenv ../venv
+virtualenv $HOME/.venv
 
 # activate the environment
-source ../venv/bin/activate
-
-ROOT=$HOME/DL2/DL2-group5-med-seg
-cd "$ROOT"
+source $HOME/.venv/bin/activate
 
 # install dependencies
-pip install -r "$ROOT/requirements.txt"
+pip install cython
+
+LIE_LEARN=$HOME/jesse_workspace/DL2-group5-med-seg/src/lib/lie_learn
+cd $LIE_LEARN
+pwd 
+pip install .
+
+WORKDIR=$HOME/jesse_workspace/DL2-group5-med-seg
+
+pip install -r "$WORKDIR/requirements.txt"

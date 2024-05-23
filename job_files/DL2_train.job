@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus-per-node=1
+#SBATCH --job-name=Train
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=00:04:00
+
+#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/outputs/output_%A.out
+#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/errors/output_%A.err
+
+#SBATCH --ear=on
+#SBATCH --ear-policy=monitoring
+#SBATCH --ear-verbose=1
+
+date 
+
+WORKDIR=$HOME/jesse_workspace/DL2-group5-med-seg
+
+EARLDIR=$WORKDIR/logs/earl
+CHECKPOINTDIR=$WORKDIR/logs/outputs
+DATA_DIR=/scratch-shared/scur1193/M3D-Seg/M3D_Seg
+
+cd $WORKDIR
+# general module, other modules require this
+module load 2022
+# load python module for creating virtual environment
+module load IPython/8.5.0-GCCcore-11.3.0 
+# load CUDA toolkit, required for some package builds
+module load CUDA/11.7.0
+# load GCC compiler with required version
+module load GCC/11.3.0
+
+module load 
+
+source $HOME/.venv/bin/activate
+
+export SLURM_EARL_VERBOSE_PATH=$EARLDIR
+
+pwd
+
+DATASET_CODES=("0009",)
+
+python -m src.train_group5 \
+--data_dir $DATA_DIR \
+-work_dir $CHECKPOINTDIR \
+--dataset_codes ${DATASET_CODES[@]}
