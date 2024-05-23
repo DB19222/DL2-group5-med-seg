@@ -1,0 +1,33 @@
+Explicitly passing a `revision` is encouraged when loading a configuration with custom code to ensure no malicious code has been contributed in a newer revision.
+Explicitly passing a `revision` is encouraged when loading a model with custom code to ensure no malicious code has been contributed in a newer revision.
+Loading model...
+cuda:0
+model load done
+----- test combination dataset -----
+Traceback (most recent call last):
+  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 636, in <module>
+    main()
+  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 632, in main
+    eval.experiment_2()
+  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 277, in experiment_2
+    loader = self.get_test_loader(args)
+  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 164, in get_test_loader
+    combination_train_ds = self.build_concat_dataset(root_path=args['data_dir'], dataset_codes=args['dataset_codes'], transform=self.test_transform)
+  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 131, in build_concat_dataset
+    with open(datalist_json, 'r') as f:
+FileNotFoundError: [Errno 2] No such file or directory: ',/scratch-shared/scur1193/M3D-Seg/M3D_Seg/0002/0002.json'
+
+JOB STATISTICS
+==============
+Job ID: 6359441
+Cluster: snellius
+User/Group: scur1193/scur1193
+State: RUNNING
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:06:00 core-walltime
+Job Wall-clock time: 00:00:20
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 120.00 GB (120.00 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

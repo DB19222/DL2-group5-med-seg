@@ -5,12 +5,11 @@
 #SBATCH --job-name=RunSegVol
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=00:04:00
-#SBATCH --output=DL2_inference_log.out
+#SBATCH --time=02:00:00
+#SBATCH --output=DL2_inference_log_%A.out
 
 # activate the environment
 source ../venv/bin/activate
 
-# Where is the main.py?
 ### run SegVol
-python main.py --config configs/text.yaml prompt="$prompt" save_path=$save_path
+python ../src/segvol_evaluation.py

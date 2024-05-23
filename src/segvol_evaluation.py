@@ -13,34 +13,10 @@ import json
 from monai import transforms
 import os
 import torch 
-import pandas as pd
-import random
-import time
-import argparse
-
-from datasets import load_dataset
-import os
-
-dataset = load_dataset("GoodBaiBai88/M3D-Seg", cache_dir=os.environ("TMPDIR"))
-
-def set_parse():
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--dataset_code", type = str, default='0002')
-    parser.add_argument("--output_dir", type = str, default='./')
-    parser.add_argument("--prompts", type = list, default=['point', 'text'])
-    parser.add_argument("--seed", type = int, default=42)
-    parser.add_argument("--randrotate", type = bool, default=False)
-    parser.add_argument("--use_zoom", type = bool, default=True)
-    parser.add_argument("--data_dir", type= str, default='./data/datasets')
-    
-    args = parser.parse_args()
-    return args
-
-def seed_all(seed=42):
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.manual_seed(seed)
+from tqdm import tqdm
+import csv
+import gc
+import pickle
 
 class UnionDataset(Dataset):
     def __init__(self, concat_dataset, datasets):
@@ -168,7 +144,7 @@ class Evaluator:
 
 
     def get_test_loader(self, args):
-        if args['randrotate']:
+        if args['add_rotation']:
             self.test_transform = transforms.Compose(
                 [
                     #transforms.RandRotated(keys=["image", "label"], range_x=0.5, range_y=0.5, range_z=0.5, prob=1.0)
@@ -245,36 +221,15 @@ class Evaluator:
             arguments['point_prompt_group'] = [point_prompt, point_prompt_map]
         
         logits_mask = self.model.forward_test(**arguments)
+        print(data_item['label'].shape)
         dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
-        print(dice)
-        return dice
+        print(dice.item())
+        return dice.item()
     
-    def run_dataset(self, args):
-        arguments = {
-                'data_dir' : args.data_dir,
-                'dataset_codes' : [args.dataset_code],
-                'randrotate' : args.randrotate
-            }
-        loader = self.get_test_loader(arguments)
 
-        organ_to_idx = {organ:idx for idx, organ in enumerate(self.categories)}
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        result_frame = pd.DataFrame(columns=['dataset', 'organ', 'dice', 'randrotate', 'prompts'])
-
-        idx = 0
-        for item in loader:
-            ct, gt = item['image'], item['label']
-            for organ in organ_to_idx.keys():
-                dice = self.inference(ct.squeeze(0), gt.squeeze(0), prompts=args.prompts, use_zoom=args.use_zoom, cls_idx=organ_to_idx[organ])
-                result_frame.loc[idx] = [args.dataset_code, organ, dice, args.randrotate, ''.join(args.prompts)]
-                idx += 1
-        
-        result_frame.to_csv(os.path.join(args.output_dir, f'{args.dataset_code}_{args.seed}_{args.randrotate}.csv'), index=False)
-
-                
-
-    
-    def experiment_1(self, datasets=['0007', '0023', '0021', '0018', '0020'], prompts=['text', 'bbox'], use_zoom=True):
+    def experiment_1(self, datasets=['0000'], prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -286,142 +241,1241 @@ class Evaluator:
                 - SegVol trained on 25 datasets outperforms task-specific segmentation models.
                 - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
                 - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
-                whcih is superior to learning from a small number of samples. 
+                  which is superior to learning from a small number of samples. 
                 - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
                 - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
-                multiple categories in the same space. 
-
-            \cite{du2024}
-
-        """
-                 
-
-    
-    def experiment_2(self, datasets=['0002'], prompts=['text', 'point'], use_zoom=True):
-        """ 
-            External validation experiment where SegVol is compared with interactive methods such as SAMMED-3D
-
-            "To compare with these interactive segmentation models, we per- formed external validation experiments 
-            on 1,738 cases from the validation set of AMOS22 [26] and the whole novel annotated set of Universal
-            Lesion Segmentation Challenge 23(ULS23) [9]."
-
-            NOTE : The ULS dataset is not included in the opensource data provided, so we only validate 0002. 
-
-            Claims : 
-                - 
-                - 
-                - 
-
+                  multiple categories in the same space. 
         """
 
-        for code in datasets:
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Select the organs you want to map
+        target_organs = [
+            'Liver'
+        ]
+
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp1.csv'
+        experiment_name = 'exp1'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
             args = {
-                'data_dir' : os.path.join(os.curdir, 'data', 'datasets'),
-                'dataset_codes' : [code],
-                'randrotate' : True
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
             }
             loader = self.get_test_loader(args)
 
-            organ_to_idx = {organ:idx for idx, organ in enumerate(self.categories)}
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
 
-            for item in loader:
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
                 ct, gt = item['image'], item['label']
-                print(ct.squeeze(0).shape, gt.squeeze(0).shape)
-                self.inference(ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx['liver'])
+                torch.cuda.empty_cache()
+                gc.collect()
 
-        # for dataset in datasets:
-        #     data_path = os.path.join(os.curdir, 'data', 'datasets', dataset, f'{dataset}.json')
-        #     with open(data_path, 'r') as rf:
-        #         data_json = json.loads(rf.read())
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
 
-        #     test_data = data_json['test']
+                del ct, gt, item
 
-        #     dataset_path = os.path.join(os.curdir, 'data', 'datasets')
-        #     for item in test_data:
-        #         ct_path = os.path.join(dataset_path, item['image'])
-        #         gt_path = os.path.join(dataset_path, item['label'])
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
 
-        #         categories_dict = data_json['labels']
-        #         self.categories = [x for _, x in categories_dict.items() if x != "background"]
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
 
-        #         ct_npy, gt_npy = self.model.processor.load_uniseg_case(ct_path, gt_path)
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
 
-        #         self.inference(ct_npy, gt_npy)
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
 
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
 
-            
-
-
-
-    def experiment_3(self, datasets=['0001'], prompts=[], use_zoom=True):
-        """ 
-            Additionally, the authors discuss the generalization performance of SegVol by 
-            applying it on an external MRI dataset (CHAOS).
-
-            NOTE : The huggingface dataset contains the CT data, but not the MRI data. So if we want to perform this experiment, 
-            we would have to pre-process the dataset ourselves. 
-
-            Claims :
-                - "It achieves median Dice scores of 85.70%, 80.09%, 80.04%, and 81.46% for liver, spleen, left kidney, and right kidney, respectively."
-                - This demonstrates robustness of SegVol in the face of completely unseen modality data. 
-        """
-        pass 
-
+        return dice_scores
     
-    def experiment_4(self, datasets=[], prompts=[], use_zoom=True):
+    def experiment_2a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
         """ 
-            Experiment that analyzes the relationship between spatial-prompt, and semantic prompts. 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
 
-            NOTE : It is not entirely clear which datasets are used in this experiment
-
-            "In Fig. 5 a, we quantita- tively analyze the mutually supportive relationship between semantic-prompt and spatial-prompt in 
-            19 internal segmen- tation tasks."
-
-            We can best select a few organs to perform this analysis. 
-
-            Claims :
-                - Semantic prompts help mititage the multiple plausible outputs problem in the spatial prompt setting. 
-        
-        """
-        pass
-
-    def experiment_5(self, datasets=[], prompts=[], use_zoom=True):
-        """ 
-            Experiment that studies the possibility of SegVol to reflect spatial prompts to semantic categories. 
-
-            "We implement this reflection experiment by decoding the semantic prompts from 
-            a category set and applying the softmax function among the logits of semantic 
-            prompts on the predicted mask voxels to get the prediction probabilities of different categories."
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
 
             Claims : 
-                - SegVol can give accurate semantic categories based on the spatial prompts, 
-
-        
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
         """
-        pass
 
-    def experiment_6(self, datasets=[], prompts=[], use_zoom=True):
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp2a.csv'
+        experiment_name = 'exp2a'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_2b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=True):
         """ 
-            Experiment that expands the scale of the training set, showing that model performance 
-            scales with dataset size. 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
 
             Claims : 
-                - 
-
-
-        
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
         """
-        pass
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp2b.csv'
+        experiment_name = 'exp2b'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_3a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=False):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp3a.csv'
+        experiment_name = 'exp3a'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_3b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=True):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp3b.csv'
+        experiment_name = 'exp3b'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_4a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=False):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp4a.csv'
+        experiment_name = 'exp4a'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_4b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=True):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp4b.csv'
+        experiment_name = 'exp4b'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+    
+
+    def experiment_5a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=False):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp5a.csv'
+        experiment_name = 'exp5a'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_5b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=True):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp5b.csv'
+        experiment_name = 'exp5b'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_4a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=False):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp6a.csv'
+        experiment_name = 'exp6a'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
+
+
+    def experiment_6b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=True):
+        """ 
+            Internal validation experiment in which task-specific segmentation models are compared
+            with the generally trained model SegVol. 
+
+            "The 10 internal segmentation tasks are selected from BTCV [32] and MSD- spleen [58] datasets, which focus on organ segmentation
+            and from MSD-lung, MSD-colon, and MSD-liver datasets, which focus on lesion segmentation."
+
+            Claims : 
+                - SegVol trained on 25 datasets outperforms task-specific segmentation models.
+                - Exhibits narrow DSC distribution, indicating robustness and generalization ability.
+                - Massive generative pretraining on unlabeled data endows SegVol with a complete understanding of the volumetric structures,
+                  which is superior to learning from a small number of samples. 
+                - Learning from joint datasets with semantic prompts makes SegVol generalize better to unseen data (can learn from kidney, and left-kidney)
+                - Spatial point/bbox prompts provide a precise spatial reference and help disambiguate the overlap of 
+                  multiple categories in the same space. 
+        """
+
+        if datasets is None:
+            datasets = ['0000', '0002', '0003', '0005', '0006', '0007', '0008', '0009', '0010', 
+                        '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
+                        '0021', '0022', '0023', '0024']
+
+        # Updated target_organs list
+        target_organs = [
+            'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
+            'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
+            'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
+        ]
+
+        # Updated organ_mapping dictionary
+        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+
+        def get_standardized_name(name):
+            for standard_name, aliases in organ_mapping.items():
+                if name in aliases:
+                    return standard_name
+            return None
+
+        # Initialize a dictionary to hold all the dice scores for each organ and dataset
+        dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
+        all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
+
+        csv_file = 'dice_scores_exp6b.csv'
+        experiment_name = 'exp6b'
+
+        # Write the header to the CSV file
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Organ'] + datasets
+            writer.writerow(header)
+
+        for code in tqdm(datasets):
+            args = {
+                'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
+                'dataset_codes': [code],
+                'add_rotation': add_rotation_transformation
+            }
+            loader = self.get_test_loader(args)
+
+            organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
+            all_organs_idx = {code: organ_to_idx}
+
+            for item in tqdm(loader, desc=f'Processing dataset {code}'):
+                ct, gt = item['image'], item['label']
+                torch.cuda.empty_cache()
+                gc.collect()
+
+                for raw_organ_name in organ_to_idx.keys():
+                    standard_name = get_standardized_name(raw_organ_name)
+                    if standard_name and standard_name in target_organs:
+                        dice_score = self.inference(
+                            ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
+                        )
+                        
+                        print(f"Dice score: {dice_score} from {raw_organ_name}")
+                        if dice_score is not None:  # Ensure dice_score is not None
+                            dice_scores[standard_name][code] += dice_score
+                            all_dice_scores[standard_name][code].append(dice_score)
+
+                del ct, gt, item
+
+            for organ in target_organs:
+                if dice_scores[organ][code] > 0:
+                    dice_scores[organ][code] /= len(loader)
+
+            # Save all individual dice scores to a file
+            os.makedirs('All dice scores', exist_ok=True)
+            with open(f'All dice scores/all_dice_scores_{experiment_name}_{code}.pkl', 'wb') as f:
+                pickle.dump(all_dice_scores, f)
+
+            # Update the CSV file with new data for the current dataset
+            with open(csv_file, mode='r', newline='') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                data = {row[0]: row[1:] for row in reader}
+
+            for organ in target_organs:
+                if organ in data:
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+                else:
+                    data[organ] = [0.0] * (len(datasets))
+                    data[organ][header.index(code)-1] = dice_scores[organ][code]
+
+            with open(csv_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for organ in target_organs:
+                    writer.writerow([organ] + data[organ])
+
+        return dice_scores
 
 def main():
-    args = set_parse()
-    seed_all(args.seed)
-
-    start = time.time()
     eval = Evaluator()
-    eval.run_dataset(args)
-    
-    print(f'Evaluation on dataset {args.dataset_code} done. Took {time.time()-start} seconds.')
+    eval.experiment_1()
 
 
 if __name__ == '__main__':
