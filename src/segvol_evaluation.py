@@ -17,6 +17,7 @@ from tqdm import tqdm
 import csv
 import gc
 import pickle
+import argparse
 
 class UnionDataset(Dataset):
     def __init__(self, concat_dataset, datasets):
@@ -257,7 +258,67 @@ class Evaluator:
             'Liver'
         ]
 
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
+
 
         def get_standardized_name(name):
             for standard_name, aliases in organ_mapping.items():
@@ -361,15 +422,73 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
+
 
         def get_standardized_name(name):
             for standard_name, aliases in organ_mapping.items():
@@ -474,15 +593,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -588,15 +764,73 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
+
 
         def get_standardized_name(name):
             for standard_name, aliases in organ_mapping.items():
@@ -701,15 +935,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -815,15 +1106,73 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
+
 
         def get_standardized_name(name):
             for standard_name, aliases in organ_mapping.items():
@@ -928,15 +1277,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -1042,15 +1448,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -1156,15 +1619,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -1247,7 +1767,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_4a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_6a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1270,15 +1790,72 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
 
 
         def get_standardized_name(name):
@@ -1384,15 +1961,73 @@ class Evaluator:
                         '0012', '0013', '0015', '0016', '0017', '0018', '0019', '0020', 
                         '0021', '0022', '0023', '0024']
 
-        # Updated target_organs list
         target_organs = [
             'Aorta', 'Colon cancer', 'Esophagus', 'Gallbladder', 'Inferior vena cava', 'Left adrenal gland', 
             'Left kidney', 'Liver', 'Liver tumor', 'Lung tumor', 'Pancreas', 'Portal/splenic vein', 
             'Right adrenal gland', 'Right kidney', 'Spleen', 'Stomach'
         ]
 
-        # Updated organ_mapping dictionary
-        organ_mapping = {'Aorta': ['aorta', 'Aorta', 'arota'], 'Bladder': ['bladder', 'Bladder', 'urinary_bladder'], 'Bone': ['bone', 'Bone', 'Bone_Mandible'], 'Brain': ['brain', 'Brain', 'Brainstem'], 'Colon': ['colon', 'Colon', 'colon cancer', 'Colon cancer'], 'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'], 'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'], 'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'], 'Coccyx': ['cocygis'], 'Sacrum': ['sacrum', 'Sacrum'], 'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'], 'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'], 'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'], 'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'], 'Kidney': ['kidney', 'Kidney', 'left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)', 'right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)', 'kidneys'], 'Kidney tumor': ['kidney tumor'], 'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'], 'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor', 'livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors'], 'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'], 'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'], 'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'], 'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'], 'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'], 'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'], 'Spleen': ['spleen', 'Spleen'], 'Stomach': ['stomach', 'Stomach'], 'Trachea': ['trachea', 'Trachea'], 'Duodenum': ['duodenum'], 'Intestine': ['smallintestin', 'small_bowel'], 'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'], 'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'], 'Liver vessels': ['hepatic vessels'], 'Tumor': ['tumour', 'tumor'], 'Adrenal': ['Adrenal'], 'Rectum': ['Rectum'], 'Arytenoid': ['Arytenoid'], 'Bone_Mandible': ['Bone_Mandible'], 'BuccalMucosa': ['BuccalMucosa'], 'Cavity_Oral': ['Cavity_Oral'], 'Cochlea': ['Cochlea_L', 'Cochlea_R'], 'Cricopharyngeus': ['Cricopharyngeus'], 'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'], 'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'], 'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'], 'Glnd_Submand_L': ['Glnd_Submand_L'], 'Glnd_Submand_R': ['Glnd_Submand_R'], 'Glnd_Thyroid': ['Glnd_Thyroid'], 'Glottis': ['Glottis'], 'Larynx_SG': ['Larynx_SG'], 'Lips': ['Lips'], 'OpticChiasm': ['OpticChiasm'], 'Parotid_L': ['Parotid_L'], 'Parotid_R': ['Parotid_R'], 'Pituitary': ['Pituitary'], 'SpinalCord': ['SpinalCord']}
+        organ_mapping = {
+            'Aorta': ['aorta', 'Aorta', 'arota'],
+            'Colon cancer': ['colon cancer', 'Colon cancer'],
+            'Esophagus': ['esophagus', 'Esophagus', 'Esophagus_S', 'esophagus'],
+            'Gallbladder': ['gall bladder', 'gallbladder', 'Gallbladder', 'gallbladder'],
+            'Inferior vena cava': ['inferior vena cava', 'postcava', 'Inferior vena cava', 'inferior_vena_cava', 'venacava'],
+            'Left adrenal gland': ['left adrenal gland', 'Left adrenal gland', 'adrenal_gland_left', 'leftsurretumor', 'leftsurrenalgland'],
+            'Left kidney': ['left kidney', 'leftkidney', 'kidney_left', 'Kidney (L)'],
+            'Liver': ['liver', 'Liver', 'livercyst', 'liverkyst', 'liverkyste'],
+            'Liver tumor': ['livertumor', 'livertumor01', 'livertumor02', 'livertumor03', 'livertumor04', 'livertumor05', 'livertumor06', 'livertumor07', 'livertumor1', 'livertumor2', 'livertumors', 'Liver tumor'],
+            'Lung tumor': ['lung tumors', 'Lung tumor', 'lung tumours', 'Lung tumours', 'lung tumours'],
+            'Pancreas': ['pancreas', 'Pancreas', 'pancreatic-lesion'],
+            'Portal/splenic vein': ['portal vein and splenic vein', 'portalvein', 'portalvein1', 'Portal/splenic vein', 'portal_vein_and_splenic_vein'],
+            'Right adrenal gland': ['right adrenal gland', 'Right adrenal gland', 'adrenal_gland_right', 'rightsurretumor', 'rightsurrenalgland'],
+            'Right kidney': ['right kidney', 'rightkidney', 'kidney_right', 'Kidney (R)'],
+            'Spleen': ['spleen', 'Spleen'],
+            'Stomach': ['stomach', 'Stomach'],
+            'Bladder': ['bladder', 'Bladder', 'urinary_bladder'],
+            'Bone': ['bone', 'Bone', 'Bone_Mandible'],
+            'Brain': ['brain', 'Brain', 'Brainstem'],
+            'Colon': ['colon', 'Colon'],
+            'Cervical spine': ['cervical spine C1', 'cervical spine C2', 'cervical spine C3', 'cervical spine C4', 'cervical spine C5', 'cervical spine C6', 'cervical spine C7'],
+            'Thoracic spine': ['thoracic spine T1', 'thoracic spine T2', 'thoracic spine T3', 'thoracic spine T4', 'thoracic spine T5', 'thoracic spine T6', 'thoracic spine T7', 'thoracic spine T8', 'thoracic spine T9', 'thoracic spine T10', 'thoracic spine T11', 'thoracic spine T12', 'additional 13th thoracic vertebra, T13'],
+            'Lumbar spine': ['lumbar spine L1', 'lumbar spine L2', 'lumbar spine L3', 'lumbar spine L4', 'lumbar spine L5', 'lumbar spine L6'],
+            'Coccyx': ['cocygis'],
+            'Sacrum': ['sacrum', 'Sacrum'],
+            'Heart': ['heart', 'Heart', 'heart_atrium_left', 'heart_atrium_right', 'heart_myocardium', 'heart_ventricle_left', 'heart_ventricle_right'],
+            'Kidney': ['kidney', 'Kidney', 'kidneys'],
+            'Kidney tumor': ['kidney tumor'],
+            'Lung': ['lungs', 'left lung', 'leftlung', 'right lung', 'rightlung', 'lung_lower_lobe_left', 'lung_lower_lobe_right', 'lung_middle_lobe_right', 'lung_upper_lobe_left', 'lung_upper_lobe_right'],
+            'Trachea': ['trachea', 'Trachea'],
+            'Duodenum': ['duodenum'],
+            'Intestine': ['smallintestin', 'small_bowel'],
+            'Optic nerves': ['OpticNrv_L', 'OpticNrv_R'],
+            'Liver cyst': ['livercyst', 'liverkyst', 'liverkyste'],
+            'Liver vessels': ['hepatic vessels'],
+            'Tumor': ['tumour', 'tumor'],
+            'Adrenal': ['Adrenal'],
+            'Rectum': ['Rectum'],
+            'Arytenoid': ['Arytenoid'],
+            'Bone_Mandible': ['Bone_Mandible'],
+            'BuccalMucosa': ['BuccalMucosa'],
+            'Cavity_Oral': ['Cavity_Oral'],
+            'Cochlea': ['Cochlea_L', 'Cochlea_R'],
+            'Cricopharyngeus': ['Cricopharyngeus'],
+            'Eye': ['Eye_AL', 'Eye_AR', 'Eye_PL', 'Eye_PR'],
+            'Glnd_Lacrimal_L': ['Glnd_Lacrimal_L'],
+            'Glnd_Lacrimal_R': ['Glnd_Lacrimal_R'],
+            'Glnd_Submand_L': ['Glnd_Submand_L'],
+            'Glnd_Submand_R': ['Glnd_Submand_R'],
+            'Glnd_Thyroid': ['Glnd_Thyroid'],
+            'Glottis': ['Glottis'],
+            'Larynx_SG': ['Larynx_SG'],
+            'Lips': ['Lips'],
+            'OpticChiasm': ['OpticChiasm'],
+            'Parotid_L': ['Parotid_L'],
+            'Parotid_R': ['Parotid_R'],
+            'Pituitary': ['Pituitary'],
+            'SpinalCord': ['SpinalCord']
+        }
+        
 
         def get_standardized_name(name):
             for standard_name, aliases in organ_mapping.items():
@@ -1473,10 +2108,33 @@ class Evaluator:
 
         return dice_scores
 
-def main():
+def main(args):
     eval = Evaluator()
-    eval.experiment_1()
+    
+    if '1' in args.experiments:
+        eval.experiment_1()
+    if '2' in args.experiments:
+        eval.experiment_2a()
+        eval.experiment_2b()
+    if '3' in args.experiments:
+        eval.experiment_3a()
+        eval.experiment_3b()
+    if '4' in args.experiments:
+        eval.experiment_4a()
+        eval.experiment_4b()
+    if '5' in args.experiments:
+        eval.experiment_5a()
+        eval.experiment_5b()
+    if '6' in args.experiments:
+        eval.experiment_6a()
+        eval.experiment_6b()
 
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run specific experiments.")
+    parser.add_argument(
+        'experiments', 
+        nargs='+', 
+        help='List of experiment numbers to run (e.g., 1 2 3)'
+    )
+    args = parser.parse_args()
+    main(args)

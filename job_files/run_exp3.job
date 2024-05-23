@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus-per-node=1
+#SBATCH --job-name=Exp3
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=00:59:00
+#SBATCH --output=/job_files_output/DL2_exp3_log_%A.out
+
+# activate the environment
+source venv/bin/activate
+
+### run SegVol
+python src/segvol_evaluation.py 3

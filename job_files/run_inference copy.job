@@ -5,7 +5,7 @@
 #SBATCH --job-name=RunSegVol
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=02:00:00
+#SBATCH --time=00:59:00
 #SBATCH --output=DL2_inference_log_%A.out
 
 # activate the environment
