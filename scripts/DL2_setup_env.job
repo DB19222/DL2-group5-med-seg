@@ -6,8 +6,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
 #SBATCH --time=00:59:00
-#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/output_%A.out
-#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/output_%A.err
+#SBATCH --output=/home/scur1193/DL2-group5-med-seg/logs/output_%A.out
+#SBATCH --error=/home/scur1193/DL2-group5-med-seg/logs/output_%A.err
 
 # load modules
 date 

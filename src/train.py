@@ -1,6 +1,4 @@
 import os
-
-# from peft import LoraConfig, get_peft_model
 import torch
 import argparse
 from datetime import datetime
@@ -12,13 +10,10 @@ from transformers import AutoModel, AutoTokenizer
 from .adapted_vit import AdaptedViT, AdaptedViTBaseline
 
 from torchsummary import summary
-
 import time
-
 from peft import LoraConfig, get_peft_model
 
 global_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 def freeze_model(model):
     # Freeze everything

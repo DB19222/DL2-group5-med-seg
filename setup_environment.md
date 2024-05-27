@@ -11,7 +11,7 @@ git clone https://github.com/AMLab-Amsterdam/lie_learn.git
 
 ```
 
-2. Run the script `DL2_setup_env.job` scripts, this will automatically install all required software in the correct order. 
+2. Run the script `DL2_setup_env.job`, this will automatically install all required software in the correct order. 
 
 3. IMPORTANT : An important .npy file must be manually moved into the created .venv folder `$HOME/path-to-src/src/lib/lie_learn/lie_learn/representations/SO3/pinchon_hoggan/J_dense_0-150.npy`. When this is moved into the corresponding folder in the .venv directory, the environment is ready to use. 
 
@@ -20,7 +20,7 @@ git clone https://github.com/AMLab-Amsterdam/lie_learn.git
 1. Clone the lie_learn package and the escnn package into you lib folder. 
 
 ```bash 
-cd $HOME/path-to-src/lib
+cd /path-to-src/lib
 git clone https://github.com/AMLab-Amsterdam/lie_learn.git
 git clone https://github.com/QUVA-Lab/escnn.git
 
