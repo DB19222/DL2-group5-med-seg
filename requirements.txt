@@ -1,9 +1,13 @@
+tqdm
+tensorboardx
 monai==0.9.0
 einops==0.6.1
-transformers==4.18.0
+transformers
 matplotlib
 torch
-tqdm
 scipy
+torchvision
+torchsummary
+peft
 nibabel
-datasets
+escnn

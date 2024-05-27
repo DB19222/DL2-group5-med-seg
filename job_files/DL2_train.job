@@ -5,20 +5,16 @@
 #SBATCH --job-name=Train
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=18
-#SBATCH --time=00:04:00
+#SBATCH --time=00:59:00
+#SBATCH --mem=60000M
 
-#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/outputs/output_%A.out
-#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/errors/output_%A.err
-
-#SBATCH --ear=on
-#SBATCH --ear-policy=monitoring
-#SBATCH --ear-verbose=1
+#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/outputs/5datasets_50epochs_%A.out
+#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/errors/5datasets_50epochs_%A.err
 
 date 
 
 WORKDIR=$HOME/jesse_workspace/DL2-group5-med-seg
 
-EARLDIR=$WORKDIR/logs/earl
 CHECKPOINTDIR=$WORKDIR/logs/outputs
 DATA_DIR=/scratch-shared/scur1193/M3D-Seg/M3D_Seg
 
@@ -36,13 +32,11 @@ module load
 
 source $HOME/.venv/bin/activate
 
-export SLURM_EARL_VERBOSE_PATH=$EARLDIR
-
 pwd
 
-DATASET_CODES=("0009",)
+MODELPATH=$WORKDIR/logs/outputs/medsam_19epochs_exp1datasets.pth
 
-python -m src.train_group5 \
+python -m src.train \
 --data_dir $DATA_DIR \
 -work_dir $CHECKPOINTDIR \
---dataset_codes ${DATASET_CODES[@]}
+--model_path $MODELPATH
