@@ -63,7 +63,7 @@ demos
 ## Results
 
 ### Reproduction
-⚠️⚠️⚠️ Due to technical issues, an very messy codebase and an huge dataset, we haven’t been able to fully run this experiment to meet our standards at the moment. We are planning on releasing the results by this week.⚠️⚠️⚠️
+
 
 ### Novel Contribution
 
