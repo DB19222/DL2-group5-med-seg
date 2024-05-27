@@ -56,5 +56,11 @@ cd /path-to-src/lib/escnn
 /path-to-conda/envs/DL2/bin/pip install .
 ```
 
+7. Install the rest of the requirements.
+
+```bash
+
+/path-to-conda/envs/DL2/bin/pip install -r /path-to-project-folder/requirements.txt
+```
 
 # DONE! 
