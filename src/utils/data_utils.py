@@ -29,9 +29,10 @@ class UnionDataset(Dataset):
         return self.concat_dataset[idx]
 
 class UniversalDataset(Dataset):
-    def __init__(self, data, transform, test_mode, organ_list):
+    def __init__(self, data, transform, test_mode, organ_list, data_path):
         self.data = data
         self.transform = transform
+        self.data_path = data_path
         # one pos point is base set
         self.num_positive_extra_max = 10
         self.num_negative_extra_max = 10
@@ -47,7 +48,7 @@ class UniversalDataset(Dataset):
     def __getitem__(self, idx):
         # get path
         item_dict = self.data[idx]
-        ct_path, gt_path = item_dict['image'], item_dict['label']
+        ct_path, gt_path = os.path.join(self.data_path, item_dict['image']), os.path.join(self.data_path, item_dict['label'])
         pseudo_seg_path = ct_path.replace('image.npy', 'pseudo_mask.npy')
         gt_shape = ast.literal_eval(gt_path.split('.')[-2].split('_')[-1])
 
@@ -63,15 +64,15 @@ class UniversalDataset(Dataset):
                 'label': gt_array,
                 }
         else:
-            pseudo_seg_array = np.load(pseudo_seg_path).squeeze()
-            rebuild_transform = transforms.Compose(
-                    [transforms.AddChannel(),
-                     transforms.Resize(spatial_size=ct_array.shape),])
-            pseudo_seg_array = rebuild_transform(pseudo_seg_array)
+            # pseudo_seg_array = np.load(pseudo_seg_path).squeeze()
+            # rebuild_transform = transforms.Compose(
+            #         [transforms.AddChannel(),
+            #          transforms.Resize(spatial_size=ct_array.shape),])
+            # pseudo_seg_array = rebuild_transform(pseudo_seg_array)
             item_ori = {
                 'image': ct_array,
                 'label': gt_array,
-                'pseudo_seg': pseudo_seg_array,
+                #'pseudo_seg': pseudo_seg_array,
                 }
         if self.transform is not None:
             item = self.transform(item_ori)
@@ -83,12 +84,12 @@ class UniversalDataset(Dataset):
         assert type(item) != list
         item['organ_name_list'] = self.target_list
         item['post_label'] = item['label']
-        item['pseudo_seg_cleaned'] = self.cleanse_pseudo_label(item['pseudo_seg'])
+        #item['pseudo_seg_cleaned'] = self.cleanse_pseudo_label(item['pseudo_seg'])
         post_item = self.std_keys(item)
         return post_item
     
     def std_keys(self, post_item):
-        keys_to_remain = ['image', 'post_label', 'organ_name_list', 'pseudo_seg_cleaned']
+        keys_to_remain = ['image', 'post_label', 'organ_name_list']
         keys_to_remove = post_item.keys() - keys_to_remain
         for key in keys_to_remove:
             del post_item[key]
@@ -173,13 +174,13 @@ def collate_fn(batch):
 
         for sample in batch:
             images.append(sample['image'])
-            pseudo_seg_cleaned.append(sample['pseudo_seg_cleaned'])
+            # pseudo_seg_cleaned.append(sample['pseudo_seg_cleaned'])
             assert organ_name_list is None or organ_name_list == sample['organ_name_list']
             organ_name_list = sample['organ_name_list']
             post_labels.append(sample['post_label'])
         return {
             'image': torch.stack(images, dim=0),
-            'pseudo_seg_cleaned': torch.stack(pseudo_seg_cleaned, dim=0),
+            # 'pseudo_seg_cleaned': torch.stack(pseudo_seg_cleaned, dim=0),
             'organ_name_list': organ_name_list,
             'post_label': torch.stack(post_labels, dim=0)
         }
@@ -210,24 +211,25 @@ def build_concat_dataset(root_path, dataset_codes, transform):
         with open(datalist_json, 'r') as f:
             dataset_dict = json.load(f)
         datalist = dataset_dict['train']
-        universal_ds = UniversalDataset(data=datalist, transform=transform, test_mode=False, organ_list=list(dataset_dict['labels'].values()))
+        universal_ds = UniversalDataset(data=datalist, transform=transform, test_mode=False, organ_list=list(dataset_dict['labels'].values()), data_path=root_path)
         concat_dataset.append(universal_ds)
         CombinationDataset_len += len(universal_ds)
     print(f'CombinationDataset loaded, dataset size: {CombinationDataset_len}')
     return UnionDataset(ConcatDataset(concat_dataset), concat_dataset)
 
 def get_loader(args):
-    train_transform = transforms.Compose(
-        [
+    if args.baseline:
+        train_transform = transforms.Compose(
+            [
             transforms.AddChanneld(keys=["image"]),
-            DimTranspose(keys=["image", "label", "pseudo_seg"]),
+            DimTranspose(keys=["image", "label"]),
             MinMaxNormalization(),
-            transforms.CropForegroundd(keys=["image", "label", "pseudo_seg"], source_key="image"),
-            transforms.SpatialPadd(keys=["image", "label", "pseudo_seg"], spatial_size=args.spatial_size, mode='constant'),
+            transforms.CropForegroundd(keys=["image", "label"], source_key="image"),
+            transforms.SpatialPadd(keys=["image", "label"], spatial_size=args.spatial_size, mode='constant'),
             transforms.OneOf(transforms=[
-                transforms.Resized(keys=["image", "label", "pseudo_seg"],spatial_size=args.spatial_size),
+                transforms.Resized(keys=["image", "label"],spatial_size=args.spatial_size),
                 transforms.RandCropByPosNegLabeld(
-                    keys=["image", "label", "pseudo_seg"],
+                    keys=["image", "label"],
                     label_key="label",
                     spatial_size=args.spatial_size,
                     pos=2,
@@ -239,15 +241,49 @@ def get_loader(args):
                 ],
                 weights=[1, 1]
             ),
-            transforms.RandFlipd(keys=["image", "label", "pseudo_seg"], prob=args.RandFlipd_prob, spatial_axis=0),
-            transforms.RandFlipd(keys=["image", "label", "pseudo_seg"], prob=args.RandFlipd_prob, spatial_axis=1),
-            transforms.RandFlipd(keys=["image", "label", "pseudo_seg"], prob=args.RandFlipd_prob, spatial_axis=2),
+            transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=0),
+            transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=1),
+            transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=2),
             transforms.RandScaleIntensityd(keys="image", factors=0.1, prob=args.RandScaleIntensityd_prob),
             transforms.RandShiftIntensityd(keys="image", offsets=0.1, prob=args.RandShiftIntensityd_prob),
-            transforms.Resized(keys=["image", "label", "pseudo_seg"],spatial_size=args.spatial_size),
-            transforms.ToTensord(keys=["image", "label", "pseudo_seg"]),
-        ]
-    )
+            transforms.Resized(keys=["image", "label"],spatial_size=args.spatial_size),
+            transforms.ToTensord(keys=["image", "label"]),
+            transforms.RandRotated(keys=["image", "label"], prob=0.5, range_x=0.15, range_y=0.15, range_z=1.0)
+            ]
+        )
+        print('USING RANDROTATED !!')
+    else:
+        train_transform = transforms.Compose(
+            [
+                transforms.AddChanneld(keys=["image"]),
+                DimTranspose(keys=["image", "label"]),
+                MinMaxNormalization(),
+                transforms.CropForegroundd(keys=["image", "label"], source_key="image"),
+                transforms.SpatialPadd(keys=["image", "label"], spatial_size=args.spatial_size, mode='constant'),
+                transforms.OneOf(transforms=[
+                    transforms.Resized(keys=["image", "label"],spatial_size=args.spatial_size),
+                    transforms.RandCropByPosNegLabeld(
+                        keys=["image", "label"],
+                        label_key="label",
+                        spatial_size=args.spatial_size,
+                        pos=2,
+                        neg=1,
+                        num_samples=1,
+                        image_key="image",
+                        image_threshold=0,
+                    ),
+                    ],
+                    weights=[1, 1]
+                ),
+                transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=0),
+                transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=1),
+                transforms.RandFlipd(keys=["image", "label"], prob=args.RandFlipd_prob, spatial_axis=2),
+                transforms.RandScaleIntensityd(keys="image", factors=0.1, prob=args.RandScaleIntensityd_prob),
+                transforms.RandShiftIntensityd(keys="image", offsets=0.1, prob=args.RandShiftIntensityd_prob),
+                transforms.Resized(keys=["image", "label"],spatial_size=args.spatial_size),
+                transforms.ToTensord(keys=["image", "label"]),
+            ]
+        )
 
     print(f'----- train on combination dataset -----')
     combination_train_ds = build_concat_dataset(root_path=args.data_dir, dataset_codes=args.dataset_codes, transform=train_transform)

@@ -36,11 +36,11 @@ source $HOME/.venv/bin/activate
 # install dependencies
 pip install cython
 
-LIE_LEARN=$HOME/jesse_workspace/DL2-group5-med-seg/src/lib/lie_learn
+LIE_LEARN=$HOME/DL2-group5-med-seg/src/lib/lie_learn
 cd $LIE_LEARN
 pwd 
 pip install .
 
-WORKDIR=$HOME/jesse_workspace/DL2-group5-med-seg
+WORKDIR=$HOME/DL2-group5-med-seg
 
 pip install -r "$WORKDIR/requirements.txt"

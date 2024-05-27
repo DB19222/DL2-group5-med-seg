@@ -15,7 +15,8 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 import random
 import numpy as np
-from .adapted_vit import AdaptedViT
+from .adapted_vit import AdaptedViT, AdaptedViTBaseline
+import copy 
 
 from torchsummary import summary
 
@@ -62,9 +63,13 @@ def altered_forward(self, image, text=None, boxes=None, points=None, **kwargs):
     return sl_loss
 
 
-def setup_model(pretrained_model, lora_config, input_size):
+def setup_model(pretrained_model, lora_config, input_size, baseline=False):
     # Instantiate Adapted Vision Transformer
-    adapted_ViT = AdaptedViT()
+    if baseline:
+        adapted_ViT = AdaptedViTBaseline()
+        print('USING BASELINE!!')
+    else:
+        adapted_ViT = AdaptedViT()
 
     print('Initital ViT : ')
     Initial_ViT = pretrained_model.model.image_encoder
@@ -142,8 +147,10 @@ def set_parse():
     parser.add_argument("--RandScaleIntensityd_prob", default=0.1, type=float, help="RandScaleIntensityd aug probability")
     parser.add_argument("--RandShiftIntensityd_prob", default=0.1, type=float, help="RandShiftIntensityd aug probability")
     parser.add_argument('-num_workers', type=int, default=8)
-    parser.add_argument('--use_checkpoint', type=bool, default=True)
+    parser.add_argument('--usecheckpoint', type=bool, default=True)
     parser.add_argument('--use_original', type=bool, default=False)
+    parser.add_argument('--baseline', type=bool, default=False)
+
     # dist
     parser.add_argument('--dist', dest='dist', type=bool, default=False,
                         help='distributed training or not')
@@ -155,7 +162,7 @@ def set_parse():
     parser.add_argument('-lr', type=float, default=1e-4)
     parser.add_argument('-weight_decay', type=float, default=1e-5)
     parser.add_argument('-warmup_epoch', type=int, default=10)
-    parser.add_argument('-num_epochs', type=int, default=6)
+    parser.add_argument('-num_epochs', type=int, default=4)
     parser.add_argument('-batch_size', type=int, default=1)
     parser.add_argument("--use_pseudo_label", default=True, type=bool)
     args = parser.parse_args()
@@ -250,7 +257,7 @@ def main_worker(args):
         bias="none"
     )
     segvol_model = original_model
-    segvol_model = setup_model(segvol_model, lora_config, (1, 32, 256, 256))
+    segvol_model = setup_model(segvol_model, lora_config, (1, 32, 256, 256), args.baseline)
 
     optimizer = torch.optim.AdamW(
         segvol_model.parameters(),
@@ -260,7 +267,7 @@ def main_worker(args):
 
     scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=args.warmup_epoch, max_epochs=args.num_epochs)
 
-    if args.use_checkpoint:
+    if args.usecheckpoint:
         statedict = torch.load(args.model_path)
         scheduler_dict = statedict['scheduler']
         model_dict = statedict['model']
@@ -274,7 +281,7 @@ def main_worker(args):
                 print(name)
 
         optimizer.load_state_dict(optimizer_dict)
-        scheduler.load_state_dict(scheduler_dict)
+        # scheduler.load_state_dict(scheduler_dict)
 
         print('Succesfully loaded everything!')
 
@@ -307,7 +314,7 @@ def main_worker(args):
 
         print(f'Epoch: {epoch}, Loss: {epoch_loss}')
         # save the model checkpoint
-        if (epoch+1) % 6 == 0:
+        if (epoch+1) % 4 == 0:
             checkpoint = {
                 'model' : segvol_model.state_dict(),
                 'optimizer': optimizer.state_dict(),
@@ -315,7 +322,7 @@ def main_worker(args):
                 'scheduler': scheduler.state_dict(),
                 'epoch_loss': epoch_loss
             }
-            torch.save(checkpoint, os.path.join(args.model_save_path, f'medsam_e{epoch+1}.pth'))
+            torch.save(checkpoint, os.path.join(args.model_save_path, f'medsam_e{epoch+1}_LrReinit.pth'))
             
 
 def main():

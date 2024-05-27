@@ -146,6 +146,7 @@ class AdaptedViT(nn.Module):
         dropout_rate: float = 0.0,
         spatial_dims: int = 3,
         post_activation="Tanh",
+        use_adapter=True
     ) -> None:
 
         super().__init__()
@@ -157,6 +158,7 @@ class AdaptedViT(nn.Module):
             raise ValueError("hidden_size should be divisible by num_heads.")
 
         self.classification = classification
+        self.use_adapter = use_adapter
         
         self.patch_embedding_equiv = SO3SteerablePatchEmbeddingBlock(
             in_channels=in_channels,
@@ -198,9 +200,10 @@ class AdaptedViT(nn.Module):
         emb1 = self.patch_embedding_equiv(x)
         emb2 = self.patch_embedding(x)
         x = torch.cat((emb1, emb2), dim=1)
-        x = torch.swapaxes(x, 1, 2)
-        x = self.adapter(x)
-        x = torch.swapaxes(x, 1, 2)
+        if self.use_adapter:
+            x = torch.swapaxes(x, 1, 2)
+            x = self.adapter(x)
+            x = torch.swapaxes(x, 1, 2)
 
         hidden_states_out = []
         for blk in self.blocks:
@@ -210,6 +213,7 @@ class AdaptedViT(nn.Module):
         x = self.norm(x)
 
         return x, hidden_states_out
+    
     
 class Adapter(nn.Module):
     """ 
@@ -447,3 +451,93 @@ class SO3SteerablePatchEmbeddingBlock(nn.Module):
 
 
 
+class AdaptedViTBaseline(nn.Module):
+    """
+    Vision Transformer (ViT), based on: "Dosovitskiy et al.,
+    An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>"
+
+    ViT supports Torchscript but only works for Pytorch after 1.8.
+    """
+
+    # Set the default parameters to the defaults given in the Segvol/train.py scripts
+    def __init__(
+        self,
+        in_channels: int = 1,
+        img_size: Union[Sequence[int], int] = (32, 256, 256),
+        patch_size: Union[Sequence[int], int] = (4, 16, 16),
+        hidden_size: int = 768,
+        mlp_dim: int = 3072,
+        num_layers: int = 12,
+        num_heads: int = 12,
+        pos_embed: str = "perceptron",
+        classification: bool = False,
+        num_classes: int = 2,
+        dropout_rate: float = 0.0,
+        spatial_dims: int = 3,
+        post_activation="Tanh",
+    ) -> None:
+
+        super().__init__()
+
+        if not (0 <= dropout_rate <= 1):
+            raise ValueError("dropout_rate should be between 0 and 1.")
+
+        if hidden_size % num_heads != 0:
+            raise ValueError("hidden_size should be divisible by num_heads.")
+
+        self.classification = classification
+        
+        self.patch_embedding_equiv = PatchEmbeddingBlock(
+            in_channels=in_channels,
+            img_size=img_size,
+            patch_size=(16, 16, 16),
+            hidden_size=hidden_size,
+            num_heads=num_heads,
+            pos_embed=pos_embed,
+            dropout_rate=dropout_rate,
+            spatial_dims=spatial_dims,
+        )
+
+        self.patch_embedding = PatchEmbeddingBlock(
+            in_channels=in_channels,
+            img_size=img_size,
+            patch_size=patch_size,
+            hidden_size=hidden_size,
+            num_heads=num_heads,
+            pos_embed=pos_embed,
+            dropout_rate=dropout_rate,
+            spatial_dims=spatial_dims,
+        )
+
+        # Create adapter module that concatenates two embeddings
+        self.adapter = Adapter(
+            input_size=self.patch_embedding.n_patches + self.patch_embedding_equiv.n_patches,
+            hidden_size=1000,
+            output_size=self.patch_embedding.n_patches
+        )
+
+        self.blocks = nn.ModuleList(
+            [TransformerBlock(hidden_size, mlp_dim, num_heads, dropout_rate) for i in range(num_layers)]
+        )
+        self.norm = nn.LayerNorm(hidden_size)
+        if self.classification:
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_size))
+            self.classification_head = nn.Sequential(nn.Linear(hidden_size, num_classes), nn.Tanh())
+
+    def forward(self, x):
+        emb1 = self.patch_embedding_equiv(x)
+        emb2 = self.patch_embedding(x)
+        x = torch.cat((emb1, emb2), dim=1)
+
+        x = torch.swapaxes(x, 1, 2)
+        x = self.adapter(x)
+        x = torch.swapaxes(x, 1, 2)
+
+        hidden_states_out = []
+        for blk in self.blocks:
+            x = blk(x)
+            hidden_states_out.append(x)
+
+        x = self.norm(x)
+
+        return x, hidden_states_out

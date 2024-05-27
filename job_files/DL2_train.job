@@ -8,12 +8,12 @@
 #SBATCH --time=00:59:00
 #SBATCH --mem=60000M
 
-#SBATCH --output=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/outputs/5datasets_50epochs_%A.out
-#SBATCH --error=/home/scur1193/jesse_workspace/DL2-group5-med-seg/logs/errors/5datasets_50epochs_%A.err
+#SBATCH --output=/home/scur1193/DL2-group5-med-seg/logs/outputs/5datasets_50epochs_%A.out
+#SBATCH --error=/home/scur1193/DL2-group5-med-seg/logs/errors/5datasets_50epochs_%A.err
 
 date 
 
-WORKDIR=$HOME/jesse_workspace/DL2-group5-med-seg
+WORKDIR=$HOME/DL2-group5-med-seg
 
 CHECKPOINTDIR=$WORKDIR/logs/outputs
 DATA_DIR=/scratch-shared/scur1193/M3D-Seg/M3D_Seg
