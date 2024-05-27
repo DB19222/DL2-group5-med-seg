@@ -1,0 +1,169 @@
+ViT before LoRA injection : 
+AdaptedViT(
+  (patch_embedding_equiv): SO3SteerablePatchEmbeddingBlock(
+    (patch_embeddings): R3Conv([SO(3)_on_R3[so3]: {irrep_0 (x1)}(1)], [SO(3)_on_R3[so3]: {irrep_0 (x768)}(768)], kernel_size=8, stride=8)
+  )
+  (patch_embedding): PatchEmbeddingBlock(
+    (patch_embeddings): Sequential(
+      (0): Rearrange('b c (h p1) (w p2) (d p3) -> b (h w d) (p1 p2 p3 c)', p1=4, p2=16, p3=16)
+      (1): Linear(in_features=1024, out_features=768, bias=True)
+    )
+    (dropout): Dropout(p=0.0, inplace=False)
+  )
+  (adapter): Adapter(
+    (adapter_net): ModuleList(
+      (0): Linear(in_features=768, out_features=1000, bias=True)
+      (1): ReLU()
+      (2): Linear(in_features=1000, out_features=768, bias=True)
+    )
+  )
+  (blocks): ModuleList(
+    (0-11): 12 x TransformerBlock(
+      (mlp): MLPBlock(
+        (linear1): Linear(in_features=768, out_features=3072, bias=True)
+        (linear2): Linear(in_features=3072, out_features=768, bias=True)
+        (fn): GELU(approximate='none')
+        (drop1): Dropout(p=0.0, inplace=False)
+        (drop2): Dropout(p=0.0, inplace=False)
+      )
+      (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (attn): SABlock(
+        (out_proj): Linear(in_features=768, out_features=768, bias=True)
+        (qkv): Linear(in_features=768, out_features=2304, bias=False)
+        (input_rearrange): Rearrange('b h (qkv l d) -> qkv b l h d', qkv=3, l=12)
+        (out_rearrange): Rearrange('b h l d -> b l (h d)')
+        (drop_output): Dropout(p=0.0, inplace=False)
+        (drop_weights): Dropout(p=0.0, inplace=False)
+      )
+      (norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+)
+Number of parameters : 92074984
+Number of trainable parameters : 92074984
+Percentage trainable : 100.0%
+ViT after LoRA injection : 
+PeftModel(
+  (base_model): LoraModel(
+    (model): AdaptedViT(
+      (patch_embedding_equiv): SO3SteerablePatchEmbeddingBlock(
+        (patch_embeddings): R3Conv([SO(3)_on_R3[so3]: {irrep_0 (x1)}(1)], [SO(3)_on_R3[so3]: {irrep_0 (x768)}(768)], kernel_size=8, stride=8)
+      )
+      (patch_embedding): PatchEmbeddingBlock(
+        (patch_embeddings): Sequential(
+          (0): Rearrange('b c (h p1) (w p2) (d p3) -> b (h w d) (p1 p2 p3 c)', p1=4, p2=16, p3=16)
+          (1): Linear(in_features=1024, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+      (adapter): Adapter(
+        (adapter_net): ModuleList(
+          (0): Linear(in_features=768, out_features=1000, bias=True)
+          (1): ReLU()
+          (2): Linear(in_features=1000, out_features=768, bias=True)
+        )
+      )
+      (blocks): ModuleList(
+        (0-11): 12 x TransformerBlock(
+          (mlp): MLPBlock(
+            (linear1): Linear(in_features=768, out_features=3072, bias=True)
+            (linear2): Linear(in_features=3072, out_features=768, bias=True)
+            (fn): GELU(approximate='none')
+            (drop1): Dropout(p=0.0, inplace=False)
+            (drop2): Dropout(p=0.0, inplace=False)
+          )
+          (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (attn): SABlock(
+            (out_proj): lora.Linear(
+              (base_layer): Linear(in_features=768, out_features=768, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Dropout(p=0.1, inplace=False)
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=768, out_features=16, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=16, out_features=768, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+            )
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (input_rearrange): Rearrange('b h (qkv l d) -> qkv b l h d', qkv=3, l=12)
+            (out_rearrange): Rearrange('b h l d -> b l (h d)')
+            (drop_output): Dropout(p=0.0, inplace=False)
+            (drop_weights): Dropout(p=0.0, inplace=False)
+          )
+          (norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+      (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+)
+Number of parameters : 92369896
+Number of trainable parameters : 294912
+Percentage trainable : 0.3192728505399638%
+Final model : 
+PeftModel(
+  (base_model): LoraModel(
+    (model): AdaptedViT(
+      (patch_embedding_equiv): SO3SteerablePatchEmbeddingBlock(
+        (patch_embeddings): R3Conv([SO(3)_on_R3[so3]: {irrep_0 (x1)}(1)], [SO(3)_on_R3[so3]: {irrep_0 (x768)}(768)], kernel_size=8, stride=8)
+      )
+      (patch_embedding): PatchEmbeddingBlock(
+        (patch_embeddings): Sequential(
+          (0): Rearrange('b c (h p1) (w p2) (d p3) -> b (h w d) (p1 p2 p3 c)', p1=4, p2=16, p3=16)
+          (1): Linear(in_features=1024, out_features=768, bias=True)
+        )
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+      (adapter): Adapter(
+        (adapter_net): ModuleList(
+          (0): Linear(in_features=768, out_features=1000, bias=True)
+          (1): ReLU()
+          (2): Linear(in_features=1000, out_features=768, bias=True)
+        )
+      )
+      (blocks): ModuleList(
+        (0-11): 12 x TransformerBlock(
+          (mlp): MLPBlock(
+            (linear1): Linear(in_features=768, out_features=3072, bias=True)
+            (linear2): Linear(in_features=3072, out_features=768, bias=True)
+            (fn): GELU(approximate='none')
+            (drop1): Dropout(p=0.0, inplace=False)
+            (drop2): Dropout(p=0.0, inplace=False)
+          )
+          (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (attn): SABlock(
+            (out_proj): lora.Linear(
+              (base_layer): Linear(in_features=768, out_features=768, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Dropout(p=0.1, inplace=False)
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=768, out_features=16, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=16, out_features=768, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+            )
+            (qkv): Linear(in_features=768, out_features=2304, bias=False)
+            (input_rearrange): Rearrange('b h (qkv l d) -> qkv b l h d', qkv=3, l=12)
+            (out_rearrange): Rearrange('b h l d -> b l (h d)')
+            (drop_output): Dropout(p=0.0, inplace=False)
+            (drop_weights): Dropout(p=0.0, inplace=False)
+          )
+          (norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+      (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+)
+Number of parameters : 185871544
+Number of trainable parameters : 4981480
+Percentage trainable : 2.680065970722232%

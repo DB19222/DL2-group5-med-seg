@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus-per-node=1
+#SBATCH --job-name=Train
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=00:59:00
+#SBATCH --mem=60000M
+
+#SBATCH --output=/home/scur1193/DL2-group5-med-seg/logs/outputs/5datasets_50epochs_%A.out
+#SBATCH --error=/home/scur1193/DL2-group5-med-seg/logs/errors/5datasets_50epochs_%A.err
+
+date 
+
+WORKDIR=$HOME/DL2-group5-med-seg
+
+CHECKPOINTDIR=$WORKDIR/logs/outputs
+DATA_DIR=/scratch-shared/scur1193/M3D-Seg/M3D_Seg
+
+cd $WORKDIR
+# general module, other modules require this
+module load 2022
+# load python module for creating virtual environment
+module load IPython/8.5.0-GCCcore-11.3.0 
+# load CUDA toolkit, required for some package builds
+module load CUDA/11.7.0
+# load GCC compiler with required version
+module load GCC/11.3.0
+
+module load 
+
+source $HOME/.venv/bin/activate
+
+pwd
+
+MODELPATH=$WORKDIR/logs/outputs/medsam_19epochs_exp1datasets.pth
+
+python -m src.train \
+--data_dir $DATA_DIR \
+-work_dir $CHECKPOINTDIR \
+--model_path $MODELPATH
