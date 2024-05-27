@@ -1,40 +1,0 @@
-Loading model...
-Downloading:   0%|          | 0.00/765 [00:00<?, ?B/s]Downloading: 100%|██████████| 765/765 [00:00<00:00, 5.62MB/s]
-Downloading:   0%|          | 0.00/842k [00:00<?, ?B/s]Downloading: 100%|██████████| 842k/842k [00:00<00:00, 32.9MB/s]
-Downloading:   0%|          | 0.00/512k [00:00<?, ?B/s]Downloading: 100%|██████████| 512k/512k [00:00<00:00, 6.18MB/s]
-Downloading:   0%|          | 0.00/2.12M [00:00<?, ?B/s]Downloading:   7%|▋         | 145k/2.12M [00:00<00:02, 915kB/s]Downloading:  35%|███▌      | 769k/2.12M [00:00<00:00, 2.68MB/s]Downloading: 100%|██████████| 2.12M/2.12M [00:00<00:00, 5.38MB/s]
-Downloading:   0%|          | 0.00/389 [00:00<?, ?B/s]Downloading: 100%|██████████| 389/389 [00:00<00:00, 3.67MB/s]
-Downloading:   0%|          | 0.00/379 [00:00<?, ?B/s]Downloading: 100%|██████████| 379/379 [00:00<00:00, 3.60MB/s]
-Explicitly passing a `revision` is encouraged when loading a configuration with custom code to ensure no malicious code has been contributed in a newer revision.
-Downloading:   0%|          | 0.00/82.8k [00:00<?, ?B/s]Downloading: 100%|██████████| 82.8k/82.8k [00:00<00:00, 1.05MB/s]
-Explicitly passing a `revision` is encouraged when loading a model with custom code to ensure no malicious code has been contributed in a newer revision.
-Downloading:   0%|          | 0.00/690M [00:00<?, ?B/s]Downloading:   1%|          | 5.42M/690M [00:00<00:12, 56.8MB/s]Downloading:   2%|▏         | 14.2M/690M [00:00<00:09, 77.4MB/s]Downloading:   3%|▎         | 23.8M/690M [00:00<00:07, 88.3MB/s]Downloading:   5%|▍         | 33.4M/690M [00:00<00:07, 93.2MB/s]Downloading:   6%|▋         | 43.2M/690M [00:00<00:07, 96.4MB/s]Downloading:   8%|▊         | 52.8M/690M [00:00<00:06, 97.9MB/s]Downloading:   9%|▉         | 62.5M/690M [00:00<00:06, 99.2MB/s]Downloading:  10%|█         | 72.1M/690M [00:00<00:06, 99.8MB/s]Downloading:  12%|█▏        | 81.8M/690M [00:00<00:06, 100MB/s] Downloading:  13%|█▎        | 91.5M/690M [00:01<00:06, 101MB/s]Downloading:  15%|█▍        | 101M/690M [00:01<00:06, 101MB/s] Downloading:  16%|█▌        | 111M/690M [00:01<00:06, 101MB/s]Downloading:  17%|█▋        | 121M/690M [00:01<00:05, 101MB/s]Downloading:  19%|█▉        | 130M/690M [00:01<00:05, 101MB/s]Downloading:  20%|██        | 140M/690M [00:01<00:05, 102MB/s]Downloading:  22%|██▏       | 150M/690M [00:01<00:05, 101MB/s]Downloading:  23%|██▎       | 159M/690M [00:01<00:05, 102MB/s]Downloading:  25%|██▍       | 169M/690M [00:01<00:05, 101MB/s]Downloading:  26%|██▌       | 179M/690M [00:01<00:05, 102MB/s]Downloading:  27%|██▋       | 189M/690M [00:02<00:05, 101MB/s]Downloading:  29%|██▊       | 198M/690M [00:02<00:05, 102MB/s]Downloading:  30%|███       | 208M/690M [00:02<00:04, 102MB/s]Downloading:  32%|███▏      | 218M/690M [00:02<00:04, 102MB/s]Downloading:  33%|███▎      | 227M/690M [00:02<00:04, 102MB/s]Downloading:  34%|███▍      | 237M/690M [00:02<00:04, 102MB/s]Downloading:  36%|███▌      | 247M/690M [00:02<00:04, 102MB/s]Downloading:  37%|███▋      | 257M/690M [00:02<00:04, 102MB/s]Downloading:  39%|███▊      | 266M/690M [00:02<00:04, 102MB/s]Downloading:  40%|████      | 276M/690M [00:02<00:04, 102MB/s]Downloading:  41%|████▏     | 286M/690M [00:03<00:04, 102MB/s]Downloading:  43%|████▎     | 296M/690M [00:03<00:04, 102MB/s]Downloading:  44%|████▍     | 305M/690M [00:03<00:03, 102MB/s]Downloading:  46%|████▌     | 315M/690M [00:03<00:03, 102MB/s]Downloading:  47%|████▋     | 325M/690M [00:03<00:03, 101MB/s]Downloading:  48%|████▊     | 334M/690M [00:03<00:03, 102MB/s]Downloading:  50%|████▉     | 344M/690M [00:03<00:03, 101MB/s]Downloading:  51%|█████▏    | 354M/690M [00:03<00:03, 100MB/s]Downloading:  53%|█████▎    | 363M/690M [00:03<00:03, 101MB/s]Downloading:  54%|█████▍    | 373M/690M [00:03<00:03, 101MB/s]Downloading:  55%|█████▌    | 383M/690M [00:04<00:03, 101MB/s]Downloading:  57%|█████▋    | 392M/690M [00:04<00:03, 101MB/s]Downloading:  58%|█████▊    | 402M/690M [00:04<00:02, 101MB/s]Downloading:  60%|█████▉    | 412M/690M [00:04<00:02, 102MB/s]Downloading:  61%|██████    | 422M/690M [00:04<00:02, 101MB/s]Downloading:  62%|██████▏   | 431M/690M [00:04<00:02, 102MB/s]Downloading:  64%|██████▍   | 441M/690M [00:04<00:02, 102MB/s]Downloading:  65%|██████▌   | 451M/690M [00:04<00:02, 102MB/s]Downloading:  67%|██████▋   | 460M/690M [00:04<00:02, 102MB/s]Downloading:  68%|██████▊   | 470M/690M [00:04<00:02, 102MB/s]Downloading:  70%|██████▉   | 480M/690M [00:05<00:02, 102MB/s]Downloading:  71%|███████   | 490M/690M [00:05<00:02, 102MB/s]Downloading:  72%|███████▏  | 499M/690M [00:05<00:01, 102MB/s]Downloading:  74%|███████▎  | 509M/690M [00:05<00:01, 101MB/s]Downloading:  75%|███████▌  | 519M/690M [00:05<00:01, 102MB/s]Downloading:  77%|███████▋  | 528M/690M [00:05<00:01, 101MB/s]Downloading:  78%|███████▊  | 538M/690M [00:05<00:01, 102MB/s]Downloading:  79%|███████▉  | 548M/690M [00:05<00:01, 102MB/s]Downloading:  81%|████████  | 558M/690M [00:05<00:01, 102MB/s]Downloading:  82%|████████▏ | 567M/690M [00:05<00:01, 102MB/s]Downloading:  84%|████████▎ | 577M/690M [00:06<00:01, 102MB/s]Downloading:  85%|████████▌ | 587M/690M [00:06<00:01, 102MB/s]Downloading:  86%|████████▋ | 596M/690M [00:06<00:00, 102MB/s]Downloading:  88%|████████▊ | 606M/690M [00:06<00:00, 102MB/s]Downloading:  89%|████████▉ | 616M/690M [00:06<00:00, 102MB/s]Downloading:  91%|█████████ | 625M/690M [00:06<00:00, 101MB/s]Downloading:  92%|█████████▏| 635M/690M [00:06<00:00, 102MB/s]Downloading:  93%|█████████▎| 645M/690M [00:06<00:00, 102MB/s]Downloading:  95%|█████████▍| 655M/690M [00:06<00:00, 101MB/s]Downloading:  96%|█████████▌| 664M/690M [00:06<00:00, 101MB/s]Downloading:  98%|█████████▊| 674M/690M [00:07<00:00, 102MB/s]Downloading:  99%|█████████▉| 684M/690M [00:07<00:00, 102MB/s]Downloading: 100%|██████████| 690M/690M [00:07<00:00, 101MB/s]
-cuda:0
-model load done
------ test combination dataset -----
-Traceback (most recent call last):
-  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 423, in <module>
-    main()
-  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 417, in main
-    eval.run_dataset(args)
-  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 253, in run_dataset
-    loader = self.get_test_loader(arguments)
-  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 183, in get_test_loader
-    combination_train_ds = self.build_concat_dataset(root_path=args['data_dir'], dataset_codes=args['dataset_codes'], transform=self.test_transform)
-  File "/gpfs/home5/scur1193/DL2/DL2-group5-med-seg/job_files/../src/segvol_evaluation.py", line 150, in build_concat_dataset
-    with open(datalist_json, 'r') as f:
-FileNotFoundError: [Errno 2] No such file or directory: './data/datasets/0002/0002.json'
-
-JOB STATISTICS
-==============
-Job ID: 6355263
-Cluster: snellius
-User/Group: scur1193/scur1193
-State: FAILED (exit code 1)
-Nodes: 1
-Cores per node: 18
-CPU Utilized: 00:00:19
-CPU Efficiency: 3.64% of 00:08:42 core-walltime
-Job Wall-clock time: 00:00:29
-Memory Utilized: 1.20 MB
-Memory Efficiency: 0.00% of 120.00 GB

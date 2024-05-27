@@ -1,44 +1,0 @@
-Explicitly passing a `revision` is encouraged when loading a configuration with custom code to ensure no malicious code has been contributed in a newer revision.
-Explicitly passing a `revision` is encouraged when loading a model with custom code to ensure no malicious code has been contributed in a newer revision.
-Loading model...
-cuda:0
-model load done
-  0%|          | 0/1 [00:00<?, ?it/s]----- test combination dataset -----
-CombinationDataset loaded, dataset size: 4
-
-Processing dataset 0000:   0%|          | 0/4 [00:00<?, ?it/s][A
-Processing dataset 0000:  25%|██▌       | 1/4 [00:08<00:26,  8.94s/it][A
-Processing dataset 0000:  50%|█████     | 2/4 [00:11<00:10,  5.05s/it][A
-Processing dataset 0000:  75%|███████▌  | 3/4 [00:13<00:03,  3.59s/it][A
-Processing dataset 0000: 100%|██████████| 4/4 [00:16<00:00,  3.56s/it][AProcessing dataset 0000: 100%|██████████| 4/4 [00:16<00:00,  4.17s/it]
-100%|██████████| 1/1 [00:16<00:00, 16.80s/it]100%|██████████| 1/1 [00:16<00:00, 16.80s/it]
-sliding window inference for ROI
-torch.Size([1, 1, 123, 512, 471])
-0.9627243280410767
-Dice score: 0.9627243280410767 from liver
-sliding window inference for ROI
-torch.Size([1, 1, 95, 512, 512])
-0.9556980729103088
-Dice score: 0.9556980729103088 from liver
-sliding window inference for ROI
-torch.Size([1, 1, 81, 512, 512])
-0.97160804271698
-Dice score: 0.97160804271698 from liver
-sliding window inference for ROI
-torch.Size([1, 1, 90, 512, 512])
-0.9630282521247864
-Dice score: 0.9630282521247864 from liver
-
-JOB STATISTICS
-==============
-Job ID: 6360241
-Cluster: snellius
-User/Group: scur1193/scur1193
-State: COMPLETED (exit code 0)
-Nodes: 1
-Cores per node: 18
-CPU Utilized: 00:01:17
-CPU Efficiency: 10.19% of 00:12:36 core-walltime
-Job Wall-clock time: 00:00:42
-Memory Utilized: 3.16 GB
-Memory Efficiency: 2.64% of 120.00 GB
