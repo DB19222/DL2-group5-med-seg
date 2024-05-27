@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Sequence, Union
 from escnn import nn as enn
 from escnn.nn import *
-import escnn 
+import escnn
 
 import torch
 from torch import nn
@@ -10,9 +10,8 @@ import numpy as np
 from monai.networks.blocks.transformerblock import TransformerBlock
 from monai.utils import ensure_tuple_rep
 
-# from monai.networks.blocks.pos_embed_utils import build_sincos_position_embedding
 from monai.networks.layers import Conv, trunc_normal_
-from monai.utils import deprecated_arg, ensure_tuple_rep, optional_import
+from monai.utils import ensure_tuple_rep, optional_import
 from monai.utils.module import look_up_option
 
 Rearrange, _ = optional_import("einops.layers.torch", name="Rearrange")
@@ -21,8 +20,6 @@ SUPPORTED_EMBEDDING_TYPES = {"conv", "perceptron"}
 import collections.abc
 from itertools import repeat
 from typing import List
-
-__all__ = ["build_sincos_position_embedding"]
 
 
 # Copyright (c) MONAI Consortium
@@ -37,7 +34,6 @@ __all__ = ["build_sincos_position_embedding"]
 # limitations under the License.
 
 
-
 # From PyTorch internals
 def _ntuple(n):
 
@@ -50,7 +46,10 @@ def _ntuple(n):
 
 
 def build_sincos_position_embedding(
-    grid_size: Union[int, List[int]], embed_dim: int, spatial_dims: int = 3, temperature: float = 10000.0
+    grid_size: Union[int, List[int]],
+    embed_dim: int,
+    spatial_dims: int = 3,
+    temperature: float = 10000.0,
 ) -> torch.nn.Parameter:
     """
     Builds a sin-cos position embedding based on the given grid size, embed dimension, spatial dimensions, and temperature.
@@ -76,14 +75,19 @@ def build_sincos_position_embedding(
         grid_h, grid_w = torch.meshgrid(grid_h, grid_w, indexing="ij")
 
         if embed_dim % 4 != 0:
-            raise AssertionError("Embed dimension must be divisible by 4 for 2D sin-cos position embedding")
+            raise AssertionError(
+                "Embed dimension must be divisible by 4 for 2D sin-cos position embedding"
+            )
 
         pos_dim = embed_dim // 4
         omega = torch.arange(pos_dim, dtype=torch.float32) / pos_dim
         omega = 1.0 / (temperature**omega)
         out_h = torch.einsum("m,d->md", [grid_h.flatten(), omega])
         out_w = torch.einsum("m,d->md", [grid_w.flatten(), omega])
-        pos_emb = torch.cat([torch.sin(out_w), torch.cos(out_w), torch.sin(out_h), torch.cos(out_h)], dim=1)[None, :, :]
+        pos_emb = torch.cat(
+            [torch.sin(out_w), torch.cos(out_w), torch.sin(out_h), torch.cos(out_h)],
+            dim=1,
+        )[None, :, :]
     elif spatial_dims == 3:
         to_3tuple = _ntuple(3)
         grid_size_t = to_3tuple(grid_size)
@@ -95,7 +99,9 @@ def build_sincos_position_embedding(
         grid_h, grid_w, grid_d = torch.meshgrid(grid_h, grid_w, grid_d, indexing="ij")
 
         if embed_dim % 6 != 0:
-            raise AssertionError("Embed dimension must be divisible by 6 for 3D sin-cos position embedding")
+            raise AssertionError(
+                "Embed dimension must be divisible by 6 for 3D sin-cos position embedding"
+            )
 
         pos_dim = embed_dim // 6
         omega = torch.arange(pos_dim, dtype=torch.float32) / pos_dim
@@ -115,12 +121,15 @@ def build_sincos_position_embedding(
             dim=1,
         )[None, :, :]
     else:
-        raise NotImplementedError("Spatial Dimension Size {spatial_dims} Not Implemented!")
+        raise NotImplementedError(
+            "Spatial Dimension Size {spatial_dims} Not Implemented!"
+        )
 
     pos_embed = nn.Parameter(pos_emb)
     pos_embed.requires_grad = False
 
     return pos_embed
+
 
 class AdaptedViT(nn.Module):
     """
@@ -145,8 +154,7 @@ class AdaptedViT(nn.Module):
         num_classes: int = 2,
         dropout_rate: float = 0.0,
         spatial_dims: int = 3,
-        post_activation="Tanh",
-        use_adapter=True
+        use_adapter=True,
     ) -> None:
 
         super().__init__()
@@ -159,7 +167,7 @@ class AdaptedViT(nn.Module):
 
         self.classification = classification
         self.use_adapter = use_adapter
-        
+
         self.patch_embedding_equiv = SO3SteerablePatchEmbeddingBlock(
             in_channels=in_channels,
             img_size=img_size,
@@ -183,18 +191,24 @@ class AdaptedViT(nn.Module):
 
         # Create adapter module that concatenates two embeddings
         self.adapter = Adapter(
-            input_size=self.patch_embedding.n_patches + self.patch_embedding_equiv.n_patches,
+            input_size=self.patch_embedding.n_patches
+            + self.patch_embedding_equiv.n_patches,
             hidden_size=1000,
-            output_size=self.patch_embedding.n_patches
+            output_size=self.patch_embedding.n_patches,
         )
 
         self.blocks = nn.ModuleList(
-            [TransformerBlock(hidden_size, mlp_dim, num_heads, dropout_rate) for i in range(num_layers)]
+            [
+                TransformerBlock(hidden_size, mlp_dim, num_heads, dropout_rate)
+                for i in range(num_layers)
+            ]
         )
         self.norm = nn.LayerNorm(hidden_size)
         if self.classification:
             self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_size))
-            self.classification_head = nn.Sequential(nn.Linear(hidden_size, num_classes), nn.Tanh())
+            self.classification_head = nn.Sequential(
+                nn.Linear(hidden_size, num_classes), nn.Tanh()
+            )
 
     def forward(self, x):
         emb1 = self.patch_embedding_equiv(x)
@@ -213,40 +227,37 @@ class AdaptedViT(nn.Module):
         x = self.norm(x)
 
         return x, hidden_states_out
-    
-    
+
+
 class Adapter(nn.Module):
-    """ 
-        Maybe worth to consider using a gate instead of linear layers to mix the embeddings. 
     """
+    Maybe worth to consider using a gate instead of linear layers to mix the embeddings.
+    """
+
     def __init__(
-            self,
-            input_size:int,
-            hidden_size:int,
-            output_size:int,
-            dropout=0.2
+        self, input_size: int, hidden_size: int, output_size: int, dropout=0.2
     ):
         super().__init__()
         self.adapter_net = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.Dropout(dropout),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, output_size)
+            nn.Linear(hidden_size, output_size),
         )
 
         self.apply(self._init_weights)
-    
+
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             torch.nn.init.kaiming_uniform_(m.weight)
             if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        
 
     def forward(self, x):
         for layer in self.adapter_net:
             x = layer(x)
         return x
+
 
 class PatchEmbeddingBlock(nn.Module):
     """
@@ -301,14 +312,21 @@ class PatchEmbeddingBlock(nn.Module):
             if m < p:
                 raise ValueError("patch_size should be smaller than img_size.")
             if self.pos_embed == "perceptron" and m % p != 0:
-                raise ValueError("patch_size should be divisible by img_size for perceptron.")
-        self.n_patches = np.prod([im_d // p_d for im_d, p_d in zip(img_size, patch_size)])
+                raise ValueError(
+                    "patch_size should be divisible by img_size for perceptron."
+                )
+        self.n_patches = np.prod(
+            [im_d // p_d for im_d, p_d in zip(img_size, patch_size)]
+        )
         self.patch_dim = int(in_channels * np.prod(patch_size))
 
         self.patch_embeddings: nn.Module
         if self.pos_embed == "conv":
             self.patch_embeddings = Conv[Conv.CONV, spatial_dims](
-                in_channels=in_channels, out_channels=hidden_size, kernel_size=patch_size, stride=patch_size
+                in_channels=in_channels,
+                out_channels=hidden_size,
+                kernel_size=patch_size,
+                stride=patch_size,
             )
         elif self.pos_embed == "perceptron":
             # for 3d: "b c (h p1) (w p2) (d p3)-> b (h w d) (p1 p2 p3 c)"
@@ -317,9 +335,12 @@ class PatchEmbeddingBlock(nn.Module):
             to_chars = f"b ({' '.join([c[0] for c in chars])}) ({' '.join([c[1] for c in chars])} c)"
             axes_len = {f"p{i+1}": p for i, p in enumerate(patch_size)}
             self.patch_embeddings = nn.Sequential(
-                Rearrange(f"{from_chars} -> {to_chars}", **axes_len), nn.Linear(self.patch_dim, hidden_size)
+                Rearrange(f"{from_chars} -> {to_chars}", **axes_len),
+                nn.Linear(self.patch_dim, hidden_size),
             )
-        self.position_embeddings = nn.Parameter(torch.zeros(1, self.n_patches, hidden_size))
+        self.position_embeddings = nn.Parameter(
+            torch.zeros(1, self.n_patches, hidden_size)
+        )
         self.dropout = nn.Dropout(dropout_rate)
         trunc_normal_(self.position_embeddings, mean=0.0, std=0.02, a=-2.0, b=2.0)
         self.apply(self._init_weights)
@@ -340,7 +361,7 @@ class PatchEmbeddingBlock(nn.Module):
         embeddings = x + self.position_embeddings
         embeddings = self.dropout(embeddings)
         return embeddings
-    
+
 
 class SO3SteerablePatchEmbeddingBlock(nn.Module):
     def __init__(
@@ -380,7 +401,9 @@ class SO3SteerablePatchEmbeddingBlock(nn.Module):
         for m, p in zip(img_size, patch_size):
             if m < p:
                 raise ValueError("patch_size should be smaller than img_size.")
-        self.n_patches = np.prod([im_d // p_d for im_d, p_d in zip(img_size, patch_size)])
+        self.n_patches = np.prod(
+            [im_d // p_d for im_d, p_d in zip(img_size, patch_size)]
+        )
         self.patch_dim = int(in_channels * np.prod(patch_size))
 
         # The model will be equivariant under planer rotations
@@ -393,23 +416,31 @@ class SO3SteerablePatchEmbeddingBlock(nn.Module):
         in_type = enn.FieldType(self.r3_act, [self.r3_act.trivial_repr])
         self.input_type = in_type
         # The output is still a scalar, but we use #hidden_size channels to create the embeddings for the ViT
-        out_type = enn.FieldType(self.r3_act, hidden_size*[self.r3_act.trivial_repr])
-        
-        # The 3D group equivariant convolution, that performs one pass on each block (similar to normal ViT)
-        self.patch_embeddings = enn.R3Conv(in_type, out_type, kernel_size=patch_size[0], stride=patch_size[0])
-        init.generalized_he_init(self.patch_embeddings.weights.data, self.patch_embeddings.basisexpansion, cache=True)
+        out_type = enn.FieldType(self.r3_act, hidden_size * [self.r3_act.trivial_repr])
 
-        # Create the fixed position embeddings bsed on sincos. 
+        # The 3D group equivariant convolution, that performs one pass on each block (similar to normal ViT)
+        self.patch_embeddings = enn.R3Conv(
+            in_type, out_type, kernel_size=patch_size[0], stride=patch_size[0]
+        )
+        init.generalized_he_init(
+            self.patch_embeddings.weights.data,
+            self.patch_embeddings.basisexpansion,
+            cache=True,
+        )
+
+        # Create the fixed position embeddings bsed on sincos.
         grid_size = []
         for in_size, pa_size in zip(img_size, patch_size):
             grid_size.append(in_size // pa_size)
 
-        self.position_embeddings = build_sincos_position_embedding(grid_size, hidden_size, spatial_dims)
+        self.position_embeddings = build_sincos_position_embedding(
+            grid_size, hidden_size, spatial_dims
+        )
 
     def forward(self, x):
         x = enn.GeometricTensor(x, self.input_type)
         x = self.patch_embeddings(x).tensor
-        
+
         # Flatten all spatial dimensions into one, and add the learnable encoding
         x = x.flatten(2).transpose(-1, -2)
         embeddings = x + self.position_embeddings
@@ -417,8 +448,8 @@ class SO3SteerablePatchEmbeddingBlock(nn.Module):
 
     def check_equivariance(self):
         with torch.no_grad():
-            x = torch.randn(3, 1, 32, 32 , 32)
-            
+            x = torch.randn(3, 1, 32, 32, 32)
+
             # the volumes rotated by 90 degrees in the ZY plane (i.e. around the X axis)
             x_x90 = x.rot90(1, (2, 3))
             x_x90 = enn.GeometricTensor(x_x90, self.input_type)
@@ -443,12 +474,39 @@ class SO3SteerablePatchEmbeddingBlock(nn.Module):
             y = self.patch_embeddings(x).tensor
 
             # Rotate the outputs back to the original orientation, and check whether output matches with y.
-            print('TESTING INVARIANCE:                     ')
-            print('90 degrees ROTATIONS around X axis:  ' + ('Equiv' if torch.allclose(y, yx.rot90(3, (2,3)), atol=1e-3) else 'False'))
-            print('90 degrees ROTATIONS around Y axis:  ' + ('Equiv' if torch.allclose(y, yy.rot90(3, (2,4)), atol=1e-3) else 'False'))
-            print('90 degrees ROTATIONS around Z axis:  ' + ('Equiv' if torch.allclose(y, yz.rot90(3, (3,4)), atol=1e-3) else 'False'))
-            print('180 degrees ROTATIONS around Y axis: ' + ('Equiv' if torch.allclose(y, yy180.rot90(2, (2,4)), atol=1e-4) else 'False'))
-
+            print("TESTING INVARIANCE:                     ")
+            print(
+                "90 degrees ROTATIONS around X axis:  "
+                + (
+                    "Equiv"
+                    if torch.allclose(y, yx.rot90(3, (2, 3)), atol=1e-3)
+                    else "False"
+                )
+            )
+            print(
+                "90 degrees ROTATIONS around Y axis:  "
+                + (
+                    "Equiv"
+                    if torch.allclose(y, yy.rot90(3, (2, 4)), atol=1e-3)
+                    else "False"
+                )
+            )
+            print(
+                "90 degrees ROTATIONS around Z axis:  "
+                + (
+                    "Equiv"
+                    if torch.allclose(y, yz.rot90(3, (3, 4)), atol=1e-3)
+                    else "False"
+                )
+            )
+            print(
+                "180 degrees ROTATIONS around Y axis: "
+                + (
+                    "Equiv"
+                    if torch.allclose(y, yy180.rot90(2, (2, 4)), atol=1e-4)
+                    else "False"
+                )
+            )
 
 
 class AdaptedViTBaseline(nn.Module):
@@ -486,7 +544,7 @@ class AdaptedViTBaseline(nn.Module):
             raise ValueError("hidden_size should be divisible by num_heads.")
 
         self.classification = classification
-        
+
         self.patch_embedding_equiv = PatchEmbeddingBlock(
             in_channels=in_channels,
             img_size=img_size,
@@ -511,18 +569,24 @@ class AdaptedViTBaseline(nn.Module):
 
         # Create adapter module that concatenates two embeddings
         self.adapter = Adapter(
-            input_size=self.patch_embedding.n_patches + self.patch_embedding_equiv.n_patches,
+            input_size=self.patch_embedding.n_patches
+            + self.patch_embedding_equiv.n_patches,
             hidden_size=1000,
-            output_size=self.patch_embedding.n_patches
+            output_size=self.patch_embedding.n_patches,
         )
 
         self.blocks = nn.ModuleList(
-            [TransformerBlock(hidden_size, mlp_dim, num_heads, dropout_rate) for i in range(num_layers)]
+            [
+                TransformerBlock(hidden_size, mlp_dim, num_heads, dropout_rate)
+                for i in range(num_layers)
+            ]
         )
         self.norm = nn.LayerNorm(hidden_size)
         if self.classification:
             self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_size))
-            self.classification_head = nn.Sequential(nn.Linear(hidden_size, num_classes), nn.Tanh())
+            self.classification_head = nn.Sequential(
+                nn.Linear(hidden_size, num_classes), nn.Tanh()
+            )
 
     def forward(self, x):
         emb1 = self.patch_embedding_equiv(x)
