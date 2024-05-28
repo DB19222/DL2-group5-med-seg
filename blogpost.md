@@ -284,7 +284,31 @@ When considering the other results, ... (results to be included) #TODO ROAN
 
 
 ## Testing SegVol's geometric robustness
+In clinical practice, a patient's positioning during imaging procedure often varies, introducing rotational differences in medical images. This variability can lead to inconsistencies in image segmentation. Such inconsistencies can be dangerous, especially in cancer treatment, where precise targeting is essential to minimize damage to healthy tissues while maximizing the radiation dose to unhealthy tissues. Given that bodies and organs may naturally move and rotate, these rotational differences can impact the accuracy and reliability of segmentation models. This is why it is crucial to assess and enhance the robustness of segmentation models like SegVol against such rotations. For real-time radiotherapy treatment planning, it is imperative to obtain real-time images of patients during treatment from the specific gantry where radiation is administered. This requires a rapid segmentation algorithm capable of processing images from that specific viewpoint. By utilizing a geometric-aware model, we can achieve real-time segmentation for various gantry angles, thereby advancing towards real-time radiotherapy with consistently precise segmentations. Therefore, enhancing SegVol’s rotation robustness is essential for improved model’s performance and clinical outcomes. 
 
+Since a medical imaging scan is typically taken by a scanning machine that rotates around the longitudinal axis of the patient, this is the main axis of rotation we consider when assessing the robustness of the architecture. An example of such a rotation is displayed in figure 6. 
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/rotate example.jpg" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 6.</b>Example of Rotation.</td>
+  </tr>
+</table>
+
+In our experiment, we rotate each volume 45 degrees around the longitudinal axis and x degrees around the other two axes. The results are subsequently compared to the performance of the same volumes in their original orientation. The experimental results are shown in Figure 7.
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/exp1 our.jpg" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 7.</b>Mean Dice Score for each organ using both spatial and semantic prompts.</td>
+  </tr>
+</table>
+
+The results demonstrate that the model achieves poorer performance on all organs when segmenting the rotated volumes. For certain organs, such as the liver, the drop in performance is very slight, while for other targets, such as the stomach, the drop can be as much as 26 percent. On average, the model performs approximately ten percent worse on rotated volumes leaving significant room for improvement in terms of robustness to global rotations. 
 
 ##  Exposition of its weaknesses/strengths/potential
 
@@ -337,13 +361,13 @@ In this section, the method of our proposed adaptation technique will be explain
 (Also see demo ./demos/SO3_patchembedding.ipynb)
 
 ### Adaptation Techniques
-An overview of our proposed adapted ViT is displayed in Figure 6.
+An overview of our proposed adapted ViT is displayed in Figure 8.
 <table align="center">
   <tr align="center">
       <td><img src="figures/new_architecture.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 6.</b> The proposed adapted Vision Transformer architecture.</a>.</td>
+    <td colspan=2><b>Figure 8.</b> The proposed adapted Vision Transformer architecture.</a>.</td>
   </tr>
 </table>
 
@@ -396,18 +420,18 @@ The table demonstrates the extent to which we reduced the number of trainable pa
 
 **We move this to a different place**
 Coordinate system in medical images:
-The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 6. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coodinate system.
+The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 9. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coodinate system.
 
 <table align="center">
   <tr align="center">
       <td><img src="figures/Coordinate_sytems.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 6.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
+    <td colspan=2><b>Figure 9.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
   </tr>
 </table>
 
-To evaluate the robustness of SegVol, we performed an inference task on various organs across multiple datasets. The results are illustrated in Figure 6, which highlights the differences in Dice scores on average, we observed that Dice scores decline with a 45-degree rotation along the Z-axis. Figure 7 presents the average Dice score across all datasets for each organ, indicating that rotations of 45 degrees on the Z-axis and 5.73 degrees on the X and Y axes yield poorer performance in terms of Dice scores for organ segmentation. These findings suggest that SegVol is not robust to rotations and has room for improvement in this regard.
+To evaluate the robustness of SegVol, we performed an inference task on various organs across multiple datasets. The results are illustrated in Figure 10, which highlights the differences in Dice scores on average, we observed that Dice scores decline with a 45-degree rotation along the Z-axis. Figure 11 presents the average Dice score across all datasets for each organ, indicating that rotations of 45 degrees on the Z-axis and 5.73 degrees on the X and Y axes yield poorer performance in terms of Dice scores for organ segmentation. These findings suggest that SegVol is not robust to rotations and has room for improvement in this regard.
 
 Keep in mind that we are currently working on incorporating group equivariance into SegVol, as outlined in the section *"Reproducibility Experiment Setting and Proposed Innovation/Solution"*. Once we have the results, we can (hopefully) demonstrate that our proposed method enhances SegVol's robustness to rotations, thereby making it more powerful and effective.
 
@@ -423,7 +447,7 @@ Keep in mind that we are currently working on incorporating group equivariance i
     </td>
   </tr>
   <tr>
-    <td colspan="2" style="text-align: center;"><b>Figure 7.</b> Difference in mean Dice scores across different datasets for each organs.</td>
+    <td colspan="2" style="text-align: center;"><b>Figure 10.</b> Difference in mean Dice scores across different datasets for each organs.</td>
   </tr>
 </table>
 
@@ -432,7 +456,7 @@ Keep in mind that we are currently working on incorporating group equivariance i
       <td><img src="figures/mean_dice_scores_for_each_organ_combined.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 8.</b> Difference in mean Dice scores in detail for each organ.</td>
+    <td colspan=2><b>Figure 11.</b> Difference in mean Dice scores in detail for each organ.</td>
   </tr>
 </table>
 
