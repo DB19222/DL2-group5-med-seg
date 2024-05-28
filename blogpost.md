@@ -301,7 +301,7 @@ In our experiment, we rotate each volume 45 degrees around the longitudinal axis
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png.jpg" width=800></td>
+      <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png" width=800></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 7.</b>Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
