@@ -422,7 +422,7 @@ The table demonstrates the extent to which we reduced the number of trainable pa
 
 **We move this to a different place**
 Coordinate system in medical images:
-The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 9. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coodinate system.
+The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 9. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coordinate system.
 
 <!-- <table align="center">
   <tr align="center">
