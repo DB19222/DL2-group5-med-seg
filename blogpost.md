@@ -434,7 +434,7 @@ The coordinate system in medical imaging consists of mainly three three systems:
 </table> -->
 
 #### Results of our experiments
-We applied the steerable convolution and rotated each volume 45 degrees around the longitudinal axis (i.e. z-axis) and 5.73 degrees around the other two axes. We then compared the results of the original SegVol and the fine-tuned SegVol with different combinations of prompts. These results are shown in Figure 10 - 14. Each figure has four bars for each organ with y-axis as a dice score for that organ, each bar represnts different type of model. The light blue bar is for ...
+We applied the steerable convolution and rotated each volume 45 degrees around the longitudinal axis (i.e. z-axis) and 5.73 degrees around the other two axes. We then compared the results of the original SegVol and the fine-tuned SegVol with different combinations of prompts. These results are shown in Figure 10 - 13. Each figure has four bars for each organ with y-axis as a dice score for that organ, each bar represnts different type of model. The light blue bar is for ...
 
 <table align="center">
   <tr align="center">
@@ -469,15 +469,6 @@ We applied the steerable convolution and rotated each volume 45 degrees around t
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 13.</b></a></td>
-  </tr>
-</table>
-
-<table align="center">
-  <tr align="center">
-      <td><img src="figures/exp5 our.jpg" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 14.</b></a></td>
   </tr>
 </table>
 
