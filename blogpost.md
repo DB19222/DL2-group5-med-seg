@@ -84,7 +84,7 @@ In this equation, |X ∩ Y| represents the cardinality of the intersection betwe
 
 ## Experiments
 
-This section provides an overview of the experiments conducted by the authors to validate their claims, along with the challenges encountered during our attempts to reproduce these experiments. Although the original code was provided, it lacked functionalities for plot reproduction, and additional code for saving, loading, and evaluating results had to be implemented. Furthermore, the inference pipeline wasn’t provided, so we had to write our own test dataloader and inference pipeline. Finally, not all commands were documented in the README file, necessitating further investigation to accurately replicate the experiments.
+This section provides an overview of the experiments conducted by the authors to validate their claims, along with the challenges encountered during our attempts to reproduce these experiments. Although the original code was provided, it lacked functionalities for plot reproduction, and additional code for saving, loading, and evaluating results had to be implemented. Furthermore, the inference pipeline was not provided, so we had to write our own test dataloader and inference pipeline. Finally, not all commands were documented in the README file, necessitating further investigation to accurately replicate the experiments.
 
 ### Experiment 1
 
