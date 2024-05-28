@@ -367,7 +367,7 @@ An overview of our proposed adapted ViT is displayed in Figure 8.
       <td><img src="figures/new_architecture.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 8.</b> The proposed adapted Vision Transformer architecture.</a>.</td>
+    <td colspan=2><b>Figure 8.</b> The proposed adapted Vision Transformer architecture.</a></td>
   </tr>
 </table>
 
@@ -422,41 +422,60 @@ The table demonstrates the extent to which we reduced the number of trainable pa
 Coordinate system in medical images:
 The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 9. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coodinate system.
 
-<table align="center">
+<!-- <table align="center">
   <tr align="center">
       <td><img src="figures/Coordinate_sytems.png" width=800></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 9.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
   </tr>
-</table>
+</table> -->
 
-To evaluate the robustness of SegVol, we performed an inference task on various organs across multiple datasets. The results are illustrated in Figure 10, which highlights the differences in Dice scores on average, we observed that Dice scores decline with a 45-degree rotation along the Z-axis. Figure 11 presents the average Dice score across all datasets for each organ, indicating that rotations of 45 degrees on the Z-axis and 5.73 degrees on the X and Y axes yield poorer performance in terms of Dice scores for organ segmentation. These findings suggest that SegVol is not robust to rotations and has room for improvement in this regard.
+#### Results of our experiments
+We applied the steerable convolution and rotated each volume 45 degrees around the longitudinal axis (i.e. z-axis) and 5.73 degrees around the other two axes. We then compared the results of the original SegVol and the fine-tuned SegVol with different combinations of prompts. These results are shown in Figure 10 - 14. Each figure has four bars for each organ with y-axis as a dice score for that organ, each bar represnts different type of model. The light blue bar is for ...
 
-Keep in mind that we are currently working on incorporating group equivariance into SegVol, as outlined in the section *"Reproducibility Experiment Setting and Proposed Innovation/Solution"*. Once we have the results, we can (hopefully) demonstrate that our proposed method enhances SegVol's robustness to rotations, thereby making it more powerful and effective.
-
-<table>
-  <tr>
-    <td style="text-align: center;">
-      <img src="figures/baseline_dice_scores_for_each_organ_across_datasets_r2.png" alt="Image description" />
-    </td>
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/exp1 our with title.jpg" width=800></td>
   </tr>
-  <tr>
-    <td style="text-align: center;">
-      <img src="figures/dice_scores_for_each_organ_across_datasets_r3.png" alt="Image description" />
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" style="text-align: center;"><b>Figure 10.</b> Difference in mean Dice scores across different datasets for each organs.</td>
+  <tr align="left">
+    <td colspan=2><b>Figure 10.</b></a></td>
   </tr>
 </table>
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/mean_dice_scores_for_each_organ_combined.png" width=800></td>
+      <td><img src="figures/exp2 our.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 11.</b> Difference in mean Dice scores in detail for each organ.</td>
+    <td colspan=2><b>Figure 11.</b></a></td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/exp3 our.jpg" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 12.</b></a></td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/exp4 our.jpg" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 13.</b></a></td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/exp5 our.jpg" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 14.</b></a></td>
   </tr>
 </table>
 
@@ -514,6 +533,6 @@ Roan: Provided better explanations of plots, described all dataset components, c
       <td><img src="figures/appendic_fig.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 9.</b></td>
+    <td colspan=2><b>Figure 15.</b></td>
   </tr>
 </table>
