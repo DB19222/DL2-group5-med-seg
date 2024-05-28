@@ -280,7 +280,7 @@ As mentioned in the previous section, a significant number of experiments cannot
 
 The results displayed in the first two columns show that our findings are approximately in line with those provided by the authors, with a few exceptions. A notable exception is our result for the liver tumor, which yielded a dice score of zero. The cause of this discrepancy is not entirely clear, but it is suspected to be due to corrupted data loading. Overall, the reproducibility experiment succeeds in validating the segmentation capabilities of the network.
 
-When considering the other results, ... (results to be included) #TODO ROAN
+When considering the other results, ... (results to be included)
 
 
 ## Testing SegVol's geometric robustness
