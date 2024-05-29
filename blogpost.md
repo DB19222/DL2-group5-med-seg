@@ -340,9 +340,6 @@ Group equivariant convolutional neural networks (GCNNs) further enhance classica
 
 We will be using the ESCNN (Enhanced Steerable CNN) library to implement steering convolutions. This library allows for several isometries like rotations and reflections in both 2D and 3D spaces. We chose to use steerable CNNs as we have the need for infinite groups such as 3D rotations, where memory utilization is already significant due to the nature of the data. In ESCNN, equivariant convolutions are achieved through utilizing feature maps of E(n)-equivariant steerable CNNs called feature fields, which transform predictably under operations like rotations and reflections. These feature fields can be scalar (like in gray-scale images) or n-dimensional vector fields, each transforming differently under such operations. Users can define input and output feature spaces for convolutions and create mappings similar to traditional convolutions, but with the added capability of handling group symmetries, thus facilitating the adoption of steerable convolutions into deep learning models.
 
-For our experiments we have used a rotation equivariant steerable convolution in the ESCNN library. This steerable convolution is initialized with a kernel size and stride equal to the patch size which is 16. Further it is initalised using both a scalar in and out type. In addition there will be 1 input channel and 768 output channels, similar to the original patch embedding for the original adapter.
-
-
 ##  Proposed Innovation/Solution
 Previous sections have highlighted the importance of robustness to rotations in medical imaging architectures. We have assessed the robustness of the medical segmentation foundation model, SegVol, and have demonstrated discrepancies in segmentation performance between volumes rotated 45 degrees and those that are not. This finding motivated us to investigate possible improvements.
 
@@ -364,6 +361,7 @@ Some research has been done so far on making transformers equivariant. For insta
 In this section, the method of our proposed adaptation technique will be explained. First, we will explain the choices made when creating the module with the induced rotational bias. Secondly, we will specify the choices made regarding the efficient adaptation of the foundation model SegVol.
 
 ### Induced Patch Embedding Block
+For our experiments we have used a rotation equivariant steerable convolution in the ESCNN library. This steerable convolution is initialized with a kernel size and stride equal to the patch size which is 16. Further it is initalised using both a scalar in and out type. In addition there will be 1 input channel and 768 output channels, similar to the original patch embedding for the original adapter.
 (Also see demo ./demos/SO3_patchembedding.ipynb)
 
 ### Adaptation Techniques
