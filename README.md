@@ -67,7 +67,7 @@ The results of the reproduction experiments where we evaluate inference performa
     <caption><b>Table 2: </b>Results for reproducing Experiment 1</caption>
     <thead>
       <tr>
-        <th>Category</th>
+        <th></th>
         <th>SegVol BBox+text (Paper Exp. 1)</th>
         <th>SegVol BBox+text (Ours)</th>
         <th>SegVol BBox (Ours)</th>
@@ -78,7 +78,7 @@ The results of the reproduction experiments where we evaluate inference performa
     </thead>
     <tbody>
        <tr>
-        <td>Average</td>
+        <td>Average dice score</td>
         <td>0.83</td>
         <td>0.81</td>
         <th>0.80</th>
