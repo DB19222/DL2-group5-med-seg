@@ -19,7 +19,7 @@ import pickle
 import argparse
 
 from .model import SegVolGroup5
-from .adapted_vit import AdaptedViT
+from .adapted_vit import AdaptedViT, AdaptedViTBaseline
 
 from peft import LoraConfig, get_peft_model
 from transformers import AutoModel, AutoTokenizer
@@ -43,7 +43,7 @@ def freeze_model(model):
     
     return model 
 
-def get_checkpoint_model(path):
+def get_checkpoint_model(path, args):
     clip_tokenizer = AutoTokenizer.from_pretrained("BAAI/SegVol")
     original = AutoModel.from_pretrained("BAAI/SegVol", trust_remote_code=True, test_mode=False)
     original.model.text_encoder.tokenizer = clip_tokenizer
@@ -56,8 +56,12 @@ def get_checkpoint_model(path):
         bias="none"
     )
 
-    # Instantiate adapted ViT
-    adapted_ViT = AdaptedViT()
+    if args.baseline:
+        adapted_ViT = AdaptedViTBaseline()
+        print("USING BASELINE!!")
+    else:
+        adapted_ViT = AdaptedViT()
+
     # Load the pretrained model weights and update
     pretrained_state_dict = original.model.image_encoder.state_dict()
     adapted_state_dict = adapted_ViT.state_dict()
@@ -162,7 +166,7 @@ class Evaluator:
 
         TODO : Save results, interpret results, implement experiments from paper.  
     """
-    def __init__(self):
+    def __init__(self, args):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.device = device
@@ -171,7 +175,7 @@ class Evaluator:
         self.clip_tokenizer = AutoTokenizer.from_pretrained("BAAI/SegVol")
         # self.model = AutoModel.from_pretrained("BAAI/SegVol", trust_remote_code=True, test_mode=True)
         # self.model.model.text_encoder.tokenizer = self.clip_tokenizer
-        self.model = get_checkpoint_model('src/medsam_30epochs_baseline.pth')
+        self.model = get_checkpoint_model(args.model_path, args)
         self.model.to(device)
         self.model.eval()
         print(device)
@@ -413,7 +417,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp1_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp1_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp1_{args.model_type}'
 
         # Write the header to the CSV file
@@ -592,7 +596,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2a_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2a_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp2a_{args.model_type}'
 
         # Write the header to the CSV file
@@ -772,7 +776,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2b_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2b_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp2b_{args.model_type}'
 
         # Write the header to the CSV file
@@ -952,7 +956,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3a_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3a_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp3a_{args.model_type}'
 
         # Write the header to the CSV file
@@ -1132,7 +1136,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3b_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3b_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp3b_{args.model_type}'
 
         # Write the header to the CSV file
@@ -1312,7 +1316,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4a_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4a_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp4a_{args.model_type}'
 
         # Write the header to the CSV file
@@ -1492,7 +1496,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4b_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4b_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp4b_{args.model_type}'
 
         # Write the header to the CSV file
@@ -1672,7 +1676,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5a_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5a_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp5a_{args.model_type}'
 
         # Write the header to the CSV file
@@ -1852,7 +1856,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5b_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5b_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp5b_{args.model_type}'
 
         # Write the header to the CSV file
@@ -2032,7 +2036,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6a_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6a_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp6a_{args.model_type}'
 
         # Write the header to the CSV file
@@ -2212,7 +2216,7 @@ class Evaluator:
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
         checkpoint_name = args.model_path.split('/')[-1]
-        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6b_{checkpoint_name.split('.')[0]}.csv')
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6b_{checkpoint_name.split(".")[0]}.csv')
         experiment_name = f'exp6b_{args.model_type}'
 
         # Write the header to the CSV file
@@ -2290,7 +2294,7 @@ class Evaluator:
         return dice_scores
 
 def main(args):
-    eval = Evaluator()
+    eval = Evaluator(args)
     
     experiment_mapping = {
         1: [eval.experiment_1],
