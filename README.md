@@ -26,59 +26,73 @@ First you need to clone this repository by:
 git clone https://github.com/DB19222/DL2-group5-med-seg.git
 ```
 
-To install requirements and activate environment:
+To install requirements and activate environment, take a look at our `setup_environment.md` walkthrough!
 
-```setup
-virtualenv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-To download the M3D-Seg dataset:
-
-```data
-python src/download_dataset.py
-```
 
 ## Training and Inference
 ### Training
-You can train the SegVol model with the following command:
+You can train/fine-tune the SegVol model, with or without our proposed ViT, using the following script:
 ```train
+sbatch ./scripts/DL2_train.job
 
 ```
 
 ### Inference
-You can inferene the SegVol model with the following command:
+You can reproduce our experimental  the SegVol model using the following script:
 ```inference
+sbatch ./scripts/DL2_evaluation.job
 
 ```
-## Evaluation and Demos
+## Demo
 
-To perform evaluation of the results and reproduce our results, refer to the corresponding notebooks in the [`demos/`](demos/) folder.
-The demo folder consists the following notebooks.
+To get some more details and insights on the proposed patchembedding block with the induced rotational bias, we refer you to our demo:
 
 ```
-demos
+Demo
 .
-|-- create_figures.ipynb    # Plots our results on the robustness of the SegVol model              
-|
-|-- organ_count_and_data_transformation.ipynb   # Statistics on the used dataset
-|
-|-- organ_rotations.ipynb   # Showcasing rotation mechanics visually, which are utilized in our novel contribution.
-|
-|-- csv_files       # Contains CSV files needed for create_figures.ipynb
+|-- SO3_patchembedding.ipynb   # Plots our results on the robustness of the SegVol model              
 ```
 
 ## Results
 
+In this work, we have extensively analysed the paper "SegVol: Universal and Interactive Volumetric Medical Image Segmentation",
+and have reproduced a subset of the experiments performed in the paper with the aim to validate claims made by the authors on the architecture. 
+
 ### Reproduction
 
+The results of the reproduction experiments where we evaluate inference performance of the segmentation foundation model using different prompt-types, are summarized in the following Table:
+
+<div align="center">
+  <table>
+    <caption><b>Table 2: </b>Results for reproducing Experiment 1</caption>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>SegVol BBox+text (Paper Exp. 1)</th>
+        <th>SegVol BBox+text (Ours)</th>
+        <th>SegVol BBox (Ours)</th>
+        <th>SegVol Point+text (Ours)</th>
+        <th>SegVol Point (Ours)</th>
+        <th>SegVol text (Ours)</th>
+      </tr>
+    </thead>
+    <tbody>
+       <tr>
+        <td>Average</td>
+        <td>0.83</td>
+        <td>0.81</td>
+        <th>0.80</th>
+        <th>0.75</th>
+        <th>0.70</th>
+        <th>0.75</th>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 ### Novel Contribution
 
-Figure 1 presents the average Dice score across all datasets for each organ, indicating that rotations of 45 degrees on the Z-axis and 5.73 degrees on the X and Y axes yield poorer performance in terms of Dice scores for organ segmentation. These findings suggest that SegVol is not robust to rotations and has room for improvement in this regard.
-
-Keep in mind that we are still trying to incorporate the group equivariance into SegVol in an attempt to mitigate this problem. We antipate that we get our results this week and the result should in theory narrow down the score difference.
+After determining that there exists room for improvement in terms of robustness against global rotations of the input volume, we explore incorporating a rotational inductive bias using parameter-efficient model adaptation techniques. A summarization of our findings is provided by the following Figure:
 
 <table align="center">
   <tr align="center">
@@ -106,15 +120,5 @@ To install the requirements, run the following:
 
 ```requirements
 sbatch job_files/DL2_setup_env.job
-```
-
-To install the dataset, run the following:
-```
-sbatch job_files/DL2_download_data.job
-```
-
-For performing inference task, run the following:
-```
-sbatch job_files/DL2_inference.job
 ```
 
