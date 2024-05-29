@@ -7,6 +7,15 @@
 This repository contains a reproduction and extension of ["SegVol: Universal and Interactive
 Volumetric Medical Image Segmentation"](https://arxiv.org/abs/2311.13385) by Du et al. (2023). 
 
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/segvol_model_architecture.png.png" width=800></td>
+  </tr>
+  <tr align="center">
+  </tr>
+</table>
+
 To read the full report containing detailed information on our reproduction experiments and extension study, please, refer to our [blogpost](blogpost.md).
 
 ## Requirements
