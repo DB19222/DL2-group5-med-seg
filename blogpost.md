@@ -126,7 +126,7 @@ As mentioned in the previous section, a significant number of experiments cannot
       <tr>
         <th>Category</th>
         <th>SegVol BBox+text (Paper Exp. 1)</th>
-        <th>SegVol Results BBox+text (Ours)</th>
+        <th>SegVol BBox+text (Ours)</th>
         <th>SegVol BBox (Ours)</th>
         <th>SegVol Point+text (Ours)</th>
         <th>SegVol Point (Ours)</th>
