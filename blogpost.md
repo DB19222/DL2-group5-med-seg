@@ -136,8 +136,8 @@ As mentioned in the previous section, a significant number of experiments cannot
     <tbody>
       <tr>
         <td>Aorta</td>
-        <td>0.9179</td>
-        <td>0.908332</td>
+        <td>0.92</td>
+        <td>0.91</td>
         <th>0.91</th>
         <th>0.90</th>
         <th>0.91</th>
@@ -207,15 +207,6 @@ As mentioned in the previous section, a significant number of experiments cannot
         <th>0.96</th>
       </tr>
       <tr>
-        <td>Liver tumor</td>
-        <td>0.7801</td>
-        <td>0.000000</td>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
-      </tr>
-      <tr>
         <td>Lung tumor</td>
         <td>0.73</td>
         <td>0.70</td>
@@ -280,14 +271,13 @@ As mentioned in the previous section, a significant number of experiments cannot
       </tr>
        <tr>
         <td>Average</td>
-        <td>0.</td>
-        <td>0.</td>
+        <td>0.83</td>
+        <td>0.81</td>
         <th>0.80</th>
         <th>0.75</th>
         <th>0.70</th>
         <th>0.75</th>
       </tr>
-      
     </tbody>
   </table>
 
