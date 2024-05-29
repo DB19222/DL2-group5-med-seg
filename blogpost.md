@@ -70,8 +70,6 @@ In this section, we explore the SegVol model architecture in detail, focusing on
 
 A holistic view of the model is shown in Figure 1. The model consists of 5 core components: An image encoder that embeds the volume, a spatial encoder that embeds the spatial prompts, a semantic encoder that embeds the labels, a fusion encoder which encodes the embeddings of different modalities into mask embeddings and finally a mask decoder that decodes these embeddings to produce output masks. For the image encoder, the Vision Transformer (ViT) [[3]](#p3) is employed to encode the CT-scan volume as a sequence of patch-blocks. This is performed using pre-training according to the SiMiM algorithm [[14]](#p14) on the entire dataset, followed by fine-tuning on a subset of six thousand volumes. As semantic label encoder, SegVol employs the text encoder from CLIP [[12]](#p12). CLIP is used off the shelf by using the template: ”A computerized tomography of a .”, and is frozen during training. Inspired by the foundation model for segmentation, segment-anything-model (SAM) [[11]](#p11), the authors use the point and bounding-box prompts to create spatial embeddings. Finally, self-attention and cross-attention represented by the fusion encoder combines the embeddings of the different modalities which generate the final mask embeddings. Using transposed convolutions and interpolation the predicted mask is generated.
 
-A key innovation this work contributes, is the zoom-out-zoom-in mechanism. A critical challenge of segmentation on volumetric data is the size of a data sample. The authors identify that downsampling the resolution of the input image, which is applied in many other work, causes significant information loss and therefore negatively impacts performance. To address this problem, the authors employ the zoom-out-zoom-in mechanism, which consists of multi-size training and zoom-out-zoom-in inference. The multi-size training consists of jointly training on the entire volume resized to model-input size, and on blocks of model-input size obtained from the original model. During inference the model crops the input image around a region-of-interest (ROI), and performs inference on this cropped image, supposedly resulting in more computationally efficient inference.
-
 ### Evaluation Metrics
 
 To evaluate, the original authors employ the Dice Similarity Coefficient (Dice score) to evaluate the model’s performance. The Dice score is defined as:
@@ -84,7 +82,7 @@ In this equation, |X ∩ Y| represents the cardinality of the intersection betwe
 
 ## Experiments
 
-This section provides an overview of the experiments conducted by the authors to validate their claims, along with the challenges encountered during our attempts to reproduce these experiments. Although the original code was provided, it lacked functionalities for plot reproduction, and additional code for saving, loading, and evaluating results had to be implemented. Furthermore, the inference pipeline was not provided, so we had to write our own test dataloader and inference pipeline. Finally, not all commands were documented in the README file, necessitating further investigation to accurately replicate the experiments.
+This section provides an overview of some of the experiments conducted by the authors to validate their claims. Additional experiments have been conducted, however, the datasets for these experiments were not openly available and are therefor not reproducible. In order to reproduce the experiments, the original code was provided, though it lacked functionalities for plot reproduction, and additional code for saving, loading, and evaluating results had to be implemented. Furthermore, the inference pipeline was not provided, so we had to write our own test dataloader and inference pipeline. Finally, not all commands were documented in the README file, necessitating further investigation to accurately replicate the experiments.
 
 ### Experiment 1
 
@@ -104,63 +102,6 @@ A violin plot combines elements of a box plot and a density plot to show data di
 This figure demonstrates that SegVol is performing as the best, or one of the best on average in all segmentation tasks evaluated in this experiment. This is showcased by the red dots within each violin. Additionally, this figure demonstrates that SegVol has a much narrower distribution in comparison with the other methods which suggests that SegVol is more robust than the other methods. This experiment effectively demonstrates SegVol to outperform task-specific models on a wide variety of segmentation tasks. To validate the claim that SegVol achieves state-of-the-art performance in medical image segmentation, the authors additionally have to compare with other interactive segmentation methods which is done next.
 
 ### Experiment 2
-
-In the second experiment, SegVol is evaluated and compared against other interactive segmentation models, such as SAM-MED2D [[2]](#p2) and SAM-MED3D [[13]](#p13). Six different interactive segmentation models are assessed on two datasets focused on organ and lesion segmentation tasks. The SegVol prompt configuration used in this experiment combines bounding-box and text prompts. The results are shown in Figure 3.
-
-
-<table align="center">
-  <tr align="center">
-      <td><img src="figures/Experiment_2_a.png" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 3.</b> Violin plots for comparison experiment results of SegVol and interactive methods. The vertical axis represents the Dice score <a href="#p4">[4]</a>.</td>
-  </tr>
-</table>
-
-The figure clearly demonstrates good performance of SegVol across all different tasks, being the best model on average. However, there are examples of tasks where SegVol is not outperforming the other methods on average, such as DeepLesion3D. Overall, the previously discussed experiments effectively substantiate the claim of SegVol achieving state-of-the-art results.
-
-**Note on reproducibility**: One of the two datasets used in this experiment is the Universal Lesion Segmentation Challenge 23 (ULS23). However, the data from this dataset is not included in the proposed open-source dataset provided by the authors. Consequently, we are unable to validate this experiment without performing the pre-processing of this dataset again.
-
-### Experiment 3
-
-To validate the claim that SegVol is generalizable to other modalities, the authors fine-tune SegVol on an external MRI dataset consisting of MRI images and masks for four organ categories. The results of this experiment are displayed in Table 1.
-
-<div align="center">
-
-  <table>
-    <caption><b>Table 1: </b> Results of fine-tuned SegVol on an external MRI dataset</caption>
-    <thead>
-      <tr>
-        <th>Method</th>
-        <th>Liver</th>
-        <th>Spleen</th>
-        <th>Left Kidney</th>
-        <th>Right Kidney</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>SegVol (5 Points)</td>
-        <td>0.8091 (0.7376, 0.8554)</td>
-        <td>0.7496 (0.6990, 0.7872)</td>
-        <td>0.7216 (0.6125, 0.7869)</td>
-        <td>0.7174 (0.6052, 0.8090)</td>
-      </tr>
-      <tr>
-        <td>SegVol (Bbox)</td>
-        <td>0.8570 (0.8319, 0.8819)</td>
-        <td>0.8009 (0.7702, 0.8256)</td>
-        <td>0.8004 (0.7265, 0.8452)</td>
-        <td>0.8146 (0.7593, 0.8620)</td>
-      </tr>
-    </tbody>
-  </table>
-
-</div>
-
-The results show median Dice scores in the 80 percent range, which, when compared with the results displayed in Figure 5, are approximately five to ten percent lower than the results on CT-scan data of the same organ types. These results are promising, as the performance is high despite the pre-training being done on a different modality. This effectively substantiates the claim that SegVol is generalizable to other modalities.
-
-**Note on reproducibility**: This data is again not part of the dataset the authors provide, leaving us unable to validate this experiment without redoing the pre-processing of the MRI data.
 
 To determine the optimal prompt configuration, and to validate the claim that the joint use of spatial and semantic prompts have a positive effect on the performance, the authors provide results of an experiment where different prompt configurations are compared with each other by evaluating the different configurations on 19 segmentation tasks. The results are displayed in Figure 5.
 
