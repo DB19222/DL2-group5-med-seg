@@ -423,12 +423,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -602,12 +602,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -782,12 +782,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -962,12 +962,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -1142,12 +1142,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -1322,12 +1322,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -1502,12 +1502,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -1682,12 +1682,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -1862,12 +1862,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -2042,12 +2042,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
@@ -2222,12 +2222,12 @@ class Evaluator:
             writer.writerow(header)
 
         for code in tqdm(datasets):
-            args = {
+            loader_args = {
                 'data_dir' : '/scratch-shared/scur1193/M3D-Seg/M3D_Seg',
                 'dataset_codes': [code],
                 'add_rotation': add_rotation_transformation
             }
-            loader = self.get_test_loader(args)
+            loader = self.get_test_loader(loader_args)
 
             organ_to_idx = {organ: idx for idx, organ in enumerate(self.categories)}
             all_organs_idx = {code: organ_to_idx}
