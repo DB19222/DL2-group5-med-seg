@@ -14,6 +14,7 @@ source $HOME/.venv/bin/activate
 experiment=1
 model_path=$HOME/DL2-group5-med-seg/logs/checkpoints/medsam_43epochs_exp1datasets.pth
 out_path=$HOME/DL2-group5-med-seg/logs/results
+baseline=false
 
 ### run SegVol
-python -m src.segvol_evaluation --experiment $experiment --model_path $model_path --out_dir $out_path
+python -m src.segvol_evaluation --experiment $experiment --model_path $model_path --out_dir $out_path --baseline $baseline
