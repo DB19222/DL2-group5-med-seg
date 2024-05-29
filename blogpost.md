@@ -45,15 +45,11 @@ In this blog post we  will cover this paper in detail and validate the claims ma
 
 To tackle the main challenge in volumetric medical image segmentation, namely the absence of large open-source volumetric medical datasets containing annotated CT-scans, the authors collected 25 datasets that are publicly available and combined them into one large dataset. As the wide variety of volumes in this dataset originate from different machines, with varying parameter settings, the data has a notably wide distribution. To mitigate this problem, the authors standardize the dataset.
 
-An additional challenge is the problem of missing labels, as numerous datasets contain only labels for a small number of targets. This may result in the model learning correlations between datasets and segmentation targets, which may result in reduced performance during inference. To mitigate this problem, the authors apply the unsupervised Felzenswalb-Huttenlocher (FH) algorithm [[5]](#p5) to generate pseudo-masks. This helps break dataset-specific learning, i.e., it helps mitigate the problem of a model learning to associate certain targets with datasets rather than learning the true anatomical features.
+An additional challenge is the problem of missing labels, as numerous datasets contain only labels for a small number of targets. This may result in the model learning correlations between datasets and segmentation targets, which may result in reduced performance during inference. To mitigate this problem, the authors apply the unsupervised Felzenswalb-Huttenlocher (FH) algorithm [[5]](#p5) to generate pseudo-masks. This helps mitigate the problem of a model learning to associate certain targets with datasets rather than learning the true anatomical features.
 
 The FH algorithm is a graph-based image segmentation method that conceptualizes the image as a graph where each pixel represents a node, and edges between these nodes are determined by pixel similarity. The algorithm constructs segments by comparing internal and external differences within a minimum spanning tree framework, ensuring that the segments are as homogeneous as possible [[5]](#p5). By using the FH algorithm to generate these pseudo-masks, the authors can guide the model to learn the true anatomical structures present in the images rather than overfitting to dataset-specific artifacts.
 
-However, pseudo-masks derived by the FH algorithm contain substantial noise and numerous small masks, for example, the disconnection of a complete structure and the wrong connection of different structures. To improve the pseudo-masks, authors employ the following strategies: 1) The pseudo-masks are replaced with ground truth masks when applicable. 2) Filter out tiny structures smaller than 0.001% of the whole volume. 3) Each mask is refined by dilation and erosion operations.
-
-Next, we will cover the architecture of the foundation model.
-
-
+However, pseudo-masks derived by the FH algorithm contain substantial noise and numerous small irrelevant masks. Finally then, to improve the pseudo-masks, authors employ the following strategies: 1) The pseudo-masks are replaced with ground truth masks when applicable. 2) Filter out tiny structures smaller than 0.001% of the whole volume. 3) Each mask is refined by dilation and erosion operations.
 
 ### Model architecture
 
@@ -99,7 +95,7 @@ A violin plot combines elements of a box plot and a density plot to show data di
   </tr>
 </table>
 
-This figure demonstrates that SegVol is performing as the best, or one of the best on average in all segmentation tasks evaluated in this experiment. This is showcased by the red dots within each violin. Additionally, this figure demonstrates that SegVol has a much narrower distribution in comparison with the other methods which suggests that SegVol is more robust than the other methods. This experiment effectively demonstrates SegVol to outperform task-specific models on a wide variety of segmentation tasks. To validate the claim that SegVol achieves state-of-the-art performance in medical image segmentation, the authors additionally have to compare with other interactive segmentation methods which is done next.
+This figure demonstrates that SegVol is performing as the best, or one of the best on average in all segmentation tasks evaluated in this experiment. This is showcased by the red dots within each violin. Additionally, this figure demonstrates that SegVol has a much narrower distribution in comparison with the other methods which suggests that SegVol is more robust than the other methods. This experiment effectively demonstrates SegVol to outperform task-specific models on a wide variety of segmentation tasks.
 
 ### Experiment 2
 
