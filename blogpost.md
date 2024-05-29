@@ -125,8 +125,12 @@ As mentioned in the previous section, a significant number of experiments cannot
     <thead>
       <tr>
         <th>Category</th>
-        <th>SegVol</th>
-        <th>Our Results</th>
+        <th>SegVol BBox+text</th>
+        <th>Our Results BBox+text</th>
+        <th>SegVol BBox</th>
+        <th>SegVol Point+text</th>
+        <th>SegVol Point</th>
+        <th>SegVol text</th>
       </tr>
     </thead>
     <tbody>
@@ -134,82 +138,156 @@ As mentioned in the previous section, a significant number of experiments cannot
         <td>Aorta</td>
         <td>0.9179</td>
         <td>0.908332</td>
+        <th>0.91</th>
+        <th>0.90</th>
+        <th>0.91</th>
+        <th>0.90</th>
       </tr>
       <tr>
         <td>Colon cancer</td>
-        <td>0.7582</td>
-        <td>0.672054</td>
+        <td>0.76</td>
+        <td>0.67</td>
+        <th>0.66</th>
+        <th>0.66</th>
+        <th>0.61</th>
+        <th>0.26</th>
       </tr>
       <tr>
         <td>Esophagus</td>
-        <td>0.7373</td>
-        <td>0.707955</td>
+        <td>0.74</td>
+        <td>0.71</td>
+        <th>0.69</th>
+        <th>0.65</th>
+        <th>0.69</th>
+        <th>0.74</th>
       </tr>
       <tr>
         <td>Gallbladder</td>
-        <td>0.8560</td>
-        <td>0.751226</td>
+        <td>0.86</td>
+        <td>0.75</td>
+        <th>0.74</th>
+        <th>0.60</th>
+        <th>0.61</th>
+        <th>0.70</th>
       </tr>
       <tr>
         <td>Inferior vena cava</td>
-        <td>0.8267</td>
-        <td>0.833241</td>
+        <td>0.83</td>
+        <td>0.83</td>
+        <th>0.82</th>
+        <th>0.82</th>
+        <th>0.83</th>
+        <th>0.83</th>
       </tr>
       <tr>
         <td>Left adrenal gland</td>
-        <td>0.7643</td>
-        <td>0.717314</td>
+        <td>0.76</td>
+        <td>0.72</td>
+        <th>0.72</th>
+        <th>0.49</th>
+        <th>0.54</th>
+        <th>0.58</th>
       </tr>
       <tr>
         <td>Left kidney</td>
-        <td>0.9296</td>
-        <td>0.930124</td>
+        <td>0.93</td>
+        <td>0.93</td>
+        <th>0.93</th>
+        <th>0.93</th>
+        <th>0.87</th>
+        <th>0.93</th>
       </tr>
       <tr>
         <td>Liver</td>
-        <td>0.9560</td>
-        <td>0.958999</td>
+        <td>0.96</td>
+        <td>0.96</td>
+        <th>0.93</th>
+        <th>0.96</th>
+        <th>0.85</th>
+        <th>0.96</th>
       </tr>
       <tr>
         <td>Liver tumor</td>
         <td>0.7801</td>
         <td>0.000000</td>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
       </tr>
       <tr>
         <td>Lung tumor</td>
-        <td>0.7250</td>
-        <td>0.704089</td>
+        <td>0.73</td>
+        <td>0.70</td>
+        <th>0.69</th>
+        <th>0.63</th>
+        <th>0.67</th>
+        <th>0.36</th>
       </tr>
       <tr>
         <td>Pancreas</td>
-        <td>0.8464</td>
-        <td>0.823274</td>
+        <td>0.85</td>
+        <td>0.82</td>
+        <th>0.83</th>
+        <th>0.79</th>
+        <th>0.72</th>
+        <th>0.81</th>
       </tr>
       <tr>
         <td>Portal/splenic vein</td>
-        <td>0.7188</td>
-        <td>0.740582</td>
+        <td>0.72</td>
+        <td>0.74</td>
+        <th>0.60</th>
+        <th>0.64</th>
+        <th>0.50</th>
+        <th>0.72</th>
       </tr>
       <tr>
         <td>Right adrenal gland</td>
-        <td>0.6579</td>
-        <td>0.667120</td>
+        <td>0.66</td>
+        <td>0.67</td>
+        <th>0.67</th>
+        <th>0.45</th>
+        <th>0.44</th>
+        <th>0.61</th>
       </tr>
       <tr>
         <td>Right kidney</td>
-        <td>0.9227</td>
-        <td>0.922879</td>
+        <td>0.92</td>
+        <td>0.92</td>
+        <th>0.92</th>
+        <th>0.92</th>
+        <th>0.69</th>
+        <th>0.92</th>
       </tr>
       <tr>
         <td>Spleen</td>
-        <td>0.9642</td>
-        <td>0.961387</td>
+        <td>0.96</td>
+        <td>0.96</td>
+        <th>0.96</th>
+        <th>0.96</th>
+        <th>0.93</th>
+        <th>0.96</th>
       </tr>
       <tr>
         <td>Stomach</td>
-        <td>0.9177</td>
-        <td>0.914470</td>
+        <td>0.92</td>
+        <td>0.91</td>
+        <th>0.89</th>
+        <th>0.87</th>
+        <th>0.77</th>
+        <th>0.91</th>
       </tr>
+       <tr>
+        <td>Average</td>
+        <td>0.</td>
+        <td>0.</td>
+        <th>0.80</th>
+        <th>0.75</th>
+        <th>0.70</th>
+        <th>0.75</th>
+      </tr>
+      
     </tbody>
   </table>
 
