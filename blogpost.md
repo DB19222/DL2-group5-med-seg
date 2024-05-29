@@ -307,7 +307,7 @@ In this section, the method of our proposed adaptation technique will be explain
 An overview of our proposed adapted ViT is displayed in Figure 8.
 <table align="center">
   <tr align="center">
-      <td><img src="figures/new_architecture.jpg" width=800></td>
+      <td><img src="figures/new_architecture.jpg" width=500></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 8.</b> The proposed adapted Vision Transformer architecture.</a></td>
