@@ -2292,24 +2292,17 @@ class Evaluator:
 def main(args):
     eval = Evaluator()
     
-    match args.experiments:
-        case 1:
-            eval.experiment_1(args)
-        case 2:
-            eval.experiment_2a(args)
-            eval.experiment_2b(args)
-        case 3:
-            eval.experiment_3a(args)
-            eval.experiment_3b(args)
-        case 4:
-            eval.experiment_4a(args)
-            eval.experiment_4b(args)
-        case 5:
-            eval.experiment_5a(args)
-            eval.experiment_5b(args)
-        case 6:
-            eval.experiment_6a(args)
-            eval.experiment_6b(args)
+    experiment_mapping = {
+        1: [eval.experiment_1],
+        2: [eval.experiment_2a, eval.experiment_2b],
+        3: [eval.experiment_3a, eval.experiment_3b],
+        4: [eval.experiment_4a, eval.experiment_4b],
+        5: [eval.experiment_5a, eval.experiment_5b],
+        6: [eval.experiment_6a, eval.experiment_6b],
+
+    }
+    for experiment in experiment_mapping[args.experiment]:
+        experiment(args)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run specific experiments.")
