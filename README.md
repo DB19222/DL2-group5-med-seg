@@ -10,7 +10,7 @@ Volumetric Medical Image Segmentation"](https://arxiv.org/abs/2311.13385) by Du 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/segvol_model_architecture.png.png" width=800></td>
+      <td><img src="figures/segvol_model_architecture.png" width=800></td>
   </tr>
   <tr align="center">
   </tr>
