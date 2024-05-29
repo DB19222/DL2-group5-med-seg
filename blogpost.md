@@ -436,6 +436,10 @@ The coordinate system in medical imaging consists of mainly three three systems:
 </table> -->
 
 
+As can be seen in table 1 with our adapted model is significantly worse in comparison with the SegVol baseline with regards to performance. This can probably be explained due to the limited training time that has been put into the model, as this was only 50 epoch. Our hypothesis is then that the distribution shift in the input is not fully learned yet by the model. This persists in all experiments with the different prompts, text and bounding box, bounding box, point and text and point prompts.
+
+In the first plot using both text and bounding box prompts we can see that, though our adapted fine-tuned model is performing significantly worse compared to the SegVol baseline, if we compare SegVol on rotated with non rotated data it loses on average 0.08 dice score. Whereas our baseline actually improves on average when facing it with rotated data by 0.01 on average.
+
 <table align="center">
   <tr align="center">
       <td><img src="figures/exp1 our with title.jpg" width=800></td>
@@ -445,6 +449,8 @@ The coordinate system in medical imaging consists of mainly three three systems:
   </tr>
 </table>
 
+In the second plot results are shown using solely bounding box prompts. Here we see a fairly similar pattern where again, the SegVol model is performing better but loses on average 0.11 dice on rotated data. Where our adapted model has no significant loss or improvement.
+
 <table align="center">
   <tr align="center">
       <td><img src="figures/exp2 our.jpg" width=800></td>
@@ -453,6 +459,8 @@ The coordinate system in medical imaging consists of mainly three three systems:
     <td colspan=2><b>Figure 11.</b></a></td>
   </tr>
 </table>
+
+For the third experiment where both text and point prompts are used an interesting trend may be observed. 
 
 <table align="center">
   <tr align="center">
