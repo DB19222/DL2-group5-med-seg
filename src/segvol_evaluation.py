@@ -8,7 +8,9 @@ from scipy import sparse
 import ast
 import os
 import json
+import json
 from monai import transforms
+import os
 import torch 
 from tqdm import tqdm
 import csv
@@ -18,6 +20,7 @@ import argparse
 
 from .model import SegVolGroup5
 from .adapted_vit import AdaptedViT
+
 from peft import LoraConfig, get_peft_model
 from transformers import AutoModel, AutoTokenizer
 
@@ -97,7 +100,6 @@ def get_checkpoint_model(path):
     print('Model loaded succesfully!')
     return original
 
-
 class UnionDataset(Dataset):
     def __init__(self, concat_dataset, datasets):
         self.datasets = datasets
@@ -167,8 +169,9 @@ class Evaluator:
 
         print("Loading model...")
         self.clip_tokenizer = AutoTokenizer.from_pretrained("BAAI/SegVol")
-        self.model = AutoModel.from_pretrained("BAAI/SegVol", trust_remote_code=True, test_mode=True)
-        self.model.model.text_encoder.tokenizer = self.clip_tokenizer
+        # self.model = AutoModel.from_pretrained("BAAI/SegVol", trust_remote_code=True, test_mode=True)
+        # self.model.model.text_encoder.tokenizer = self.clip_tokenizer
+        self.model = get_checkpoint_model('src/medsam_30epochs_baseline.pth')
         self.model.to(device)
         self.model.eval()
         print(device)
@@ -304,12 +307,12 @@ class Evaluator:
         print(data_item['label'].shape)
         dice = self.dice_score(logits_mask[0][0], data_item['label'][0][cls_idx], self.device)
         print(dice.item())
-        return dice.item()
+        return dice.item(), logits_mask
     
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    def experiment_1(self, datasets=['0000'], prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_1(self, args, datasets=['0000'], prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -409,8 +412,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp1.csv'
-        experiment_name = 'exp1'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp1_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp1_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -437,7 +441,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -445,6 +449,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -478,7 +490,7 @@ class Evaluator:
 
         return dice_scores
     
-    def experiment_2a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_2a(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -579,8 +591,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp2a.csv'
-        experiment_name = 'exp2a'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2a_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp2a_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -607,7 +620,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -615,6 +628,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -649,7 +670,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_2b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=True):
+    def experiment_2b(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text', 'bbox'], use_zoom=True, add_rotation_transformation=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -750,8 +771,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp2b.csv'
-        experiment_name = 'exp2b'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp2b_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp2b_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -778,7 +800,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -786,6 +808,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -820,7 +850,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_3a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_3a(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -921,8 +951,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp3a.csv'
-        experiment_name = 'exp3a'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3a_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp3a_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -949,7 +980,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -957,6 +988,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -991,7 +1030,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_3b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=True):
+    def experiment_3b(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['bbox'], use_zoom=True, add_rotation_transformation=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1092,8 +1131,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp3b.csv'
-        experiment_name = 'exp3b'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp3b_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp3b_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1120,7 +1160,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1128,6 +1168,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -1162,7 +1210,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_4a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_4a(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1263,8 +1311,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp4a.csv'
-        experiment_name = 'exp4a'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4a_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp4a_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1291,7 +1340,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1299,6 +1348,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -1333,7 +1390,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_4b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=True):
+    def experiment_4b(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point', 'text'], use_zoom=True, add_rotation_transformation=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1434,8 +1491,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp4b.csv'
-        experiment_name = 'exp4b'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp4b_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp4b_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1462,7 +1520,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1470,6 +1528,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -1504,7 +1570,7 @@ class Evaluator:
         return dice_scores
     
 
-    def experiment_5a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_5a(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1605,8 +1671,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp5a.csv'
-        experiment_name = 'exp5a'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5a_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp5a_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1633,7 +1700,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1641,6 +1708,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -1675,7 +1750,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_5b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=True):
+    def experiment_5b(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['point'], use_zoom=True, add_rotation_transformation=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1776,8 +1851,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp5b.csv'
-        experiment_name = 'exp5b'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp5b_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp5b_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1804,7 +1880,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1812,6 +1888,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -1846,7 +1930,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_6a(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=False):
+    def experiment_6a(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=False):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -1947,8 +2031,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp6a.csv'
-        experiment_name = 'exp6a'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6a_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp6a_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -1975,7 +2060,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -1983,6 +2068,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -2017,7 +2110,7 @@ class Evaluator:
         return dice_scores
 
 
-    def experiment_6b(self, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=True):
+    def experiment_6b(self, args, datasets=['0007', '0018', '0020', '0021', '0023'] , prompts=['text'], use_zoom=True, add_rotation_transformation=True):
         """ 
             Internal validation experiment in which task-specific segmentation models are compared
             with the generally trained model SegVol. 
@@ -2118,8 +2211,9 @@ class Evaluator:
         dice_scores = {organ: {ds: 0.0 for ds in datasets} for organ in target_organs}
         all_dice_scores = {organ: {ds: [] for ds in datasets} for organ in target_organs}
 
-        csv_file = 'dice_scores_exp6b.csv'
-        experiment_name = 'exp6b'
+        checkpoint_name = args.model_path.split('/')[-1]
+        csv_file = os.path.join(args.out_dir, f'dice_scores_exp6b_{checkpoint_name.split('.')[0]}.csv')
+        experiment_name = f'exp6b_{args.model_type}'
 
         # Write the header to the CSV file
         with open(csv_file, mode='w', newline='') as file:
@@ -2146,7 +2240,7 @@ class Evaluator:
                 for raw_organ_name in organ_to_idx.keys():
                     standard_name = get_standardized_name(raw_organ_name)
                     if standard_name and standard_name in target_organs:
-                        dice_score = self.inference(
+                        dice_score, mask = self.inference(
                             ct.squeeze(0), gt.squeeze(0), prompts=prompts, use_zoom=use_zoom, cls_idx=organ_to_idx[raw_organ_name]
                         )
                         
@@ -2154,6 +2248,14 @@ class Evaluator:
                         if dice_score is not None:  # Ensure dice_score is not None
                             dice_scores[standard_name][code] += dice_score
                             all_dice_scores[standard_name][code].append(dice_score)
+
+                            # # Save the mask with dataset code, organ name, and an index
+                            # mask_dir = f'masks/{code}/{standard_name}'
+                            # os.makedirs(mask_dir, exist_ok=True)
+                            # mask_idx = len(os.listdir(mask_dir))
+                            # mask_path = os.path.join(mask_dir, f'{experiment_name}_mask_{mask_idx}.pt')
+                            # torch.save(mask, mask_path)
+                            # print(f'Mask saved to {mask_path}')
 
                 del ct, gt, item
 
@@ -2190,30 +2292,35 @@ class Evaluator:
 def main(args):
     eval = Evaluator()
     
-    if '1' in args.experiments:
-        eval.experiment_1()
-    if '2' in args.experiments:
-        eval.experiment_2a()
-        eval.experiment_2b()
-    if '3' in args.experiments:
-        eval.experiment_3a()
-        eval.experiment_3b()
-    if '4' in args.experiments:
-        eval.experiment_4a()
-        eval.experiment_4b()
-    if '5' in args.experiments:
-        eval.experiment_5a()
-        eval.experiment_5b()
-    if '6' in args.experiments:
-        eval.experiment_6a()
-        eval.experiment_6b()
+    match args.experiments:
+        case 1:
+            eval.experiment_1(args)
+        case 2:
+            eval.experiment_2a(args)
+            eval.experiment_2b(args)
+        case 3:
+            eval.experiment_3a(args)
+            eval.experiment_3b(args)
+        case 4:
+            eval.experiment_4a(args)
+            eval.experiment_4b(args)
+        case 5:
+            eval.experiment_5a(args)
+            eval.experiment_5b(args)
+        case 6:
+            eval.experiment_6a(args)
+            eval.experiment_6b(args)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run specific experiments.")
-    parser.add_argument(
-        'experiments', 
-        nargs='+', 
-        help='List of experiment numbers to run (e.g., 1 2 3)'
-    )
+    parser.add_argument('--experiment', type=int, default=1)
+    parser.add_argument("--model_path", type=str, default="")
+    parser.add_argument("--out_dir", type=str, default="./")
+    parser.add_argument("--baseline", type=bool, default=False)
     args = parser.parse_args()
+    if args.baseline:
+        args.model_type = 'baseline'
+    else:
+        args.model_type = 'finetuned'
+
     main(args)

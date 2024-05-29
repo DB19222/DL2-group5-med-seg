@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus-per-node=1
+#SBATCH --job-name=Exp1_BL
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=00:59:00
+#SBATCH --output=/home/scur1193/DL2-group5-med-seg/logs/outputs/DL2_experiment_baseline_log_%A.out
+
+# activate the environment
+source $HOME/.venv/bin/activate
+
+experiment=1
+model_path=$HOME/DL2-group5-med-seg/logs/checkpoints/medsam_43epochs_exp1datasets.pth
+out_path=$HOME/DL2-group5-med-seg/logs/results
+
+### run SegVol
+python -m src.segvol_evaluation --experiment $experiment --model_path $model_path --out_dir $out_path
