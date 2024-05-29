@@ -125,12 +125,12 @@ As mentioned in the previous section, a significant number of experiments cannot
     <thead>
       <tr>
         <th>Category</th>
-        <th>SegVol BBox+text</th>
-        <th>Our Results BBox+text</th>
-        <th>SegVol BBox</th>
-        <th>SegVol Point+text</th>
-        <th>SegVol Point</th>
-        <th>SegVol text</th>
+        <th>SegVol BBox+text (Paper Exp. 1)</th>
+        <th>SegVol Results BBox+text (Ours)</th>
+        <th>SegVol BBox (Ours)</th>
+        <th>SegVol Point+text (Ours)</th>
+        <th>SegVol Point (Ours)</th>
+        <th>SegVol text (Ours)</th>
       </tr>
     </thead>
     <tbody>
