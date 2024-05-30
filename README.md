@@ -1,8 +1,8 @@
 # Medical Multimodal Segmentation Using Foundation Models
 
-### Danny van den Berg, Jesse Brouwers, Taiki Papandreou, and Roan van Blanken
+### Danny van den Berg, Roan van Blanken, Jesse Brouwers and Taiki Papandreou
 
----
+## Overview
 
 This repository contains a reproduction and extension of ["SegVol: Universal and Interactive
 Volumetric Medical Image Segmentation"](https://arxiv.org/abs/2311.13385) by Du et al. (2023). 
@@ -10,7 +10,7 @@ Volumetric Medical Image Segmentation"](https://arxiv.org/abs/2311.13385) by Du 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/segvol_model_architecture.png" width=800></td>
+      <td><img src="figures/segvol_model_architecture.png" width=1000></td>
   </tr>
   <tr align="center">
   </tr>
@@ -97,7 +97,7 @@ After determining that there exists room for improvement in terms of robustness 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/dice_scores_per_prompt_SegVol_baseline_30_epochs_ft_25_epochs.png" width=800></td>
+      <td><img src="figures/dice_scores_per_prompt_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 1.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models. The origal SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs. </td>

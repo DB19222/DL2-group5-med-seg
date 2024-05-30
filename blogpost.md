@@ -1,6 +1,6 @@
 # Medical Multimodal Segmentation Using Foundation Models
 
-### Danny van den Berg, Jesse Brouwers, Taiki Papandreou, and Roan van Blanken
+### Danny van den Berg, Roan van Blanken, Jesse Brouwers and Taiki Papandreou
 #### Teaching Assistant: Stefanos Achlatis
 
 
@@ -23,7 +23,13 @@ Medical imaging has revolutionized the healthcare industry by enabling non-invas
 Image segmentation is the process of partitioning an image into meaningful segments, such as organs, tumors, or lesions. This is essential for numerous clinical applications, including surgical planning, disease monitoring and radiotherapy in cancer treatment, where it helps to minimize radiation damage to healthy tissues and maximize the dose to tumors. The primary goals in medical image segmentation are to achieve high accuracy, speed, and efficiency. Accurate segmentation ensures that clinicians can make precise assessments and decisions. Speed is vital for real-time applications, such as during surgical procedures or radiotherapy sessions where immediate adjustments may be needed. Efficiency encompasses the computational resources required, including memory and processing power, which is critical in clinical settings with limited hardware capabilities. Despite significant advancements, several challenges persist in medical image segmentation. The variability and complexity of anatomical structures, the presence of noise and artifacts in medical images, and the scarcity of annotated training data are key obstacles.
 
 ### Related Work
-Before going into the details of SegVol, it is essential to explore existing research in the field of medical image segmentation. Traditional segmentation models often face challenges in accurately segmenting complex structures like tumors and cysts due to insufficient training data and a lack of ability to leverage spatial information from user interaction, which results in subpar performance [[9]](#p9). Moreover, many traditional methods utilize a sliding window approach for processing volumetric data, which is computationally expensive and inefficient, as it captures only local information without providing a comprehensive view of the entire volume. Recent adaptations of Segment Anything Model (SAM) for medical imaging have shown mixed results. SAM-Med2D [[2]](#p2) incorporates 2D adapters to process medical images slice-by-slice using SAM’s prompt-based segmentation approach, but it overlooks the 3D spatial context in volumetric data, leading to fragmented segmentation and missing inter-slice continuity. To address this, SAM-Med3D [[13]](#p13) extends SAM to directly operate on 3D volumetric data using 3D Vision Transformers (3D ViT), which capture detailed three-dimensional contexts and improve segmentation accuracy and robustness. However, SAM-Med3D’s high computational resource requirements present practical challenges for real-time clinical application. Other models have also made significant contributions to medical image segmentation. Swin-UNet [[1]](#p1) integrates Swin Transformers to achieve high-resolution segmentation outputs through a hierarchical architecture that processes images in non-overlapping local windows, shifting these windows across various layers to capture both local and global contexts. This multi-level feature representation produces detailed and precise segmentation maps. Similarly, UNETR [[7]](#p7) combines U-Net’s hierarchical feature extraction with Transformers' global context aggregation to capture long-range dependencies across slices, enhancing segmentation accuracy through multi-head self-attention mechanisms. CT-SAM3D [[6]](#p6) represents a further evolution by merging the strengths of transformers and convolutional layers in a U-shaped architecture, allowing for multi-scale feature extraction and fusion and addressing deficiencies in purely transformer-based approaches. The combination of local and global features in CT-SAM3D leads to superior performance across a wide range of medical imaging tasks, including SegVol. However, due to the absence of a public codebase, we decided to conduct our experiments on SegVol.
+Before going into the details of SegVol, it is essential to explore existing research in the field of medical image segmentation. Traditional segmentation models often face challenges in accurately segmenting complex structures like tumors and cysts due to insufficient training data and a lack of ability to leverage spatial information from user interaction, which results in subpar performance [[9]](#p9).
+
+Moreover, many traditional methods utilize a sliding window approach for processing volumetric data, which is computationally expensive and inefficient, as it captures only local information without providing a comprehensive view of the entire volume. Recent adaptations of Segment Anything Model (SAM) for medical imaging have shown mixed results. SAM-Med2D [[2]](#p2) incorporates 2D adapters to process medical images slice-by-slice using SAM’s prompt-based segmentation approach, but it overlooks the 3D spatial context in volumetric data, leading to fragmented segmentation and missing inter-slice continuity.
+
+To address this, SAM-Med3D [[13]](#p13) extends SAM to directly operate on 3D volumetric data using 3D Vision Transformers (3D ViT), which capture detailed three-dimensional contexts and improve segmentation accuracy and robustness. However, SAM-Med3D’s high computational resource requirements present practical challenges for real-time clinical application. Other models have also made significant contributions to medical image segmentation. Swin-UNet [[1]](#p1) integrates Swin Transformers to achieve high-resolution segmentation outputs through a hierarchical architecture that processes images in non-overlapping local windows, shifting these windows across various layers to capture both local and global contexts. This multi-level feature representation produces detailed and precise segmentation maps.
+
+Similarly, UNETR [[7]](#p7) combines U-Net’s hierarchical feature extraction with Transformers' global context aggregation to capture long-range dependencies across slices, enhancing segmentation accuracy through multi-head self-attention mechanisms. CT-SAM3D [[6]](#p6) represents a further evolution by merging the strengths of transformers and convolutional layers in a U-shaped architecture, allowing for multi-scale feature extraction and fusion and addressing deficiencies in purely transformer-based approaches. The combination of local and global features in CT-SAM3D leads to superior performance across a wide range of medical imaging tasks, including SegVol. However, due to the absence of a public codebase, we decided to conduct our experiments on SegVol.
 
 ### An analysis of the paper and its key components
 
@@ -39,7 +45,7 @@ In this blog post we  will cover this paper in detail and validate the claims ma
 
 ## Method
 
-*This section delves into the detailed workings of SegVol, covering its dataset processing techniques, model architecture, and the innovative methods employed to enhance volumetric medical image segmentation.*
+This section delves into the detailed workings of SegVol, covering its dataset processing techniques, model architecture, and the innovative methods employed to enhance volumetric medical image segmentation.
 
 ### Dataset and its processing
 
@@ -55,16 +61,17 @@ However, pseudo-masks derived by the FH algorithm contain substantial noise and 
 
 In this section, we explore the SegVol model architecture in detail, focusing on its components and mechanisms that enable effective volumetric medical image segmentation. The model's design integrates multiple encoders and a unique zoom-out-zoom-in mechanism to address the complexities of 3D data processing.
 
+A holistic view of the model is shown in Figure 1. The model consists of 5 core components: An image encoder that embeds the volume, a spatial encoder that embeds the spatial prompts, a semantic encoder that embeds the labels, a fusion encoder which encodes the embeddings of different modalities into mask embeddings and finally a mask decoder that decodes these embeddings to produce output masks. For the image encoder, the Vision Transformer (ViT) [[3]](#p3) is employed to encode the CT-scan volume as a sequence of patch-blocks. This is performed using pre-training according to the SiMiM algorithm [[14]](#p14) on the entire dataset, followed by fine-tuning on a subset of six thousand volumes. As semantic label encoder, SegVol employs the text encoder from CLIP [[12]](#p12). CLIP is used off the shelf by using the template: ”A computerized tomography of a .”, and is frozen during training. Inspired by the foundation model for segmentation, segment-anything-model (SAM) [[11]](#p11), the authors use the point and bounding-box prompts to create spatial embeddings. Finally, self-attention and cross-attention represented by the fusion encoder combines the embeddings of the different modalities which generate the final mask embeddings. Using transposed convolutions and interpolation the predicted mask is generated.
+
 <table align="center">
   <tr align="center">
-      <td><img id="segvol-figure" src="figures/segvol_model_architecture.png" width=800></td>
+      <td><img id="segvol-figure" src="figures/segvol_model_architecture.png" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 1.</b> Graphic overview of SegVol <a href="#p4">[4]</a>.</td>
+    <td colspan=2><b>Figure 1.</b> Graphic overview of SegVol <a href="#p4">[4]</a>. SegVol can model the 3D anatomical structures from volumetric inputs with easy user interactions including bounding box, point and text prompts.</td>
   </tr>
 </table>
 
-A holistic view of the model is shown in Figure 1. The model consists of 5 core components: An image encoder that embeds the volume, a spatial encoder that embeds the spatial prompts, a semantic encoder that embeds the labels, a fusion encoder which encodes the embeddings of different modalities into mask embeddings and finally a mask decoder that decodes these embeddings to produce output masks. For the image encoder, the Vision Transformer (ViT) [[3]](#p3) is employed to encode the CT-scan volume as a sequence of patch-blocks. This is performed using pre-training according to the SiMiM algorithm [[14]](#p14) on the entire dataset, followed by fine-tuning on a subset of six thousand volumes. As semantic label encoder, SegVol employs the text encoder from CLIP [[12]](#p12). CLIP is used off the shelf by using the template: ”A computerized tomography of a .”, and is frozen during training. Inspired by the foundation model for segmentation, segment-anything-model (SAM) [[11]](#p11), the authors use the point and bounding-box prompts to create spatial embeddings. Finally, self-attention and cross-attention represented by the fusion encoder combines the embeddings of the different modalities which generate the final mask embeddings. Using transposed convolutions and interpolation the predicted mask is generated.
 
 ### Evaluation Metrics
 
@@ -76,7 +83,7 @@ $$
 
 In this equation, |X ∩ Y| represents the cardinality of the intersection between the predicted segmentation set X and the ground truth set Y. The terms |X| and |Y| refer to the cardinalities of the sets X and Y, respectively. The Dice score is a widely used metric in image segmentation tasks, as it quantifies the similarity between the predicted and true segmentations. This makes it particularly effective for assessing the degree of overlap in binary segmentation results.
 
-## Experiments
+## Experiments and Reproducibility
 
 This section provides an overview of some of the experiments conducted by the authors to validate their claims. Additional experiments have been conducted, however, the datasets for these experiments were not openly available and are therefor not reproducible. In order to reproduce the experiments, the original code was provided, though it lacked functionalities for plot reproduction, and additional code for saving, loading, and evaluating results had to be implemented. Furthermore, the inference pipeline was not provided, so we had to write our own test dataloader and inference pipeline. Finally, not all commands were documented in the README file, necessitating further investigation to accurately replicate the experiments.
 
@@ -316,10 +323,10 @@ In our experiment, we rotate each volume 45 degrees around the longitudinal axis
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png" width=1000></td>
+      <td><img src="figures/experiment_1_dice_scores_SegVol.png" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 8.</b>Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
+    <td colspan=2><b>Figure 8.</b> Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
   </tr>
 </table>
 
@@ -424,7 +431,7 @@ Table 3 gives an overview on the number of (trainable) parameters. This table de
   </table>
 </div>
 
-##  Experiments
+## Results of the Proposed Adaptation Technique
 
 To assess how effectively our geometric adaptation technique can incorporate robustness to rotations, we conducted a series of experiments. First, we integrated our modules into the original SegVol model and continued training on the SegVol training set, updating our modules while keeping the original backbone frozen. Due to limited computational resources, further training on the entire dataset was not feasible. Therefore, we chose to train on the subset of five datasets also used in previous sections to reduce computational demands.
 
@@ -450,14 +457,13 @@ Turning to our own novel contribution, we can conclude that steering convolution
 For future research we then strongly encourage a further exploration of this particular innovation. Future studies should encompass more data, extended training durations, as well as hyperparameter search when performing this “geometric fine-tuning”. Additionally, due to the way the Monai ViT was implemented, the out-projection was the most straightforward to use for LoRA-adapter injections, however research has proven the Query and Value matrices in the self-attention block yield best performance when adapted using LoRA. Rewriting the adapted ViT architecture to enable this is a promising future research direction. Additionally, future research can investigate whether increasing the level up to which features are equivariant can further improve robustness.
 
 ## Authors' Contributions
-Danny: Contributed to the overall blog post, implemented the SO(3) patch embedding block, and assisted with the inference pipeline. Developed the proposed adaptation technique, helped refine the experimental setup, and assisted with the initial implementation of the transformer-based architecture.
+**Danny**: Contributed to the overall blog post, implemented the SO(3) patch embedding block, and assisted with the inference pipeline. Developed the proposed adaptation technique, helped refine the experimental setup, and assisted with the initial implementation of the transformer-based architecture.
 
-Taiki: Explained the mathematical background and motivations behind steerable convolutions and SO(3) equivariance. Investigated translational equivariance, elaborated on medical terms, and explained the Felzenswalb-Huttenlocher algorithm. Made references clickable and contributed to related work and the introduction sections, emphasizing the medical relevance of rotation robustness. Structured the repository and implemented reproducibility experiment configurations.
+**Roan**: Finalized the inference pipeline by adding data collection and inference scripts. Descriped all dataset components. Visualized and analyzed the dataset. Facilitated the dataset solution on Snellius with Jesse and Taiki. Helped Jesse with the model diagram. Made the final edits to the blog post and ensured the overall coherence of the text. Executed experiments and produced visualizations and analyses for "Experiments and Reproducibility". Executed experiments and produced visualizations and analyses for "Results of the Proposed Adaptation Technique". Created 2 notebooks for all the visualizations and analyses.
 
-Jesse: Designed the proposed architecture, and contributed motivations behind hyperparameter and design choices. Investigated literature on adaptation techniques, cleaned the repository, and merged cleaned inference code with train scripts. Created the model diagram and the demo notebook of the SO3 patchembedding block. Implemented the pipeline for our contribution and conducted the inference pipeline setup with Danny. Produced visualizations and analyses for "Reproduction of the Experiments," and assisted with run executions, figures, and tables for other sections.
+**Jesse**: Designed the proposed architecture, and contributed motivations behind hyperparameter and design choices. Investigated literature on adaptation techniques, cleaned the repository, and merged cleaned inference code with train scripts. Created the model diagram and the demo notebook of the SO3 patchembedding block. Implemented the pipeline for our contribution and conducted the inference pipeline setup with Danny. Produced visualizations and analyses for "Reproduction of the Experiments," and assisted with run executions, figures, and tables for other sections.
 
-Roan: Provided better explanations of plots, described all dataset components, combined the original experiments with the reproduction section, and defined and tested the z-axis accuracy. Evaluated plots, adjusted the inference pipeline, and facilitated the dataset solution on Snellius with Jesse and Taiki. Executed experiments and produced visualizations and analyses for "Reproduction of the Experiments."
-
+**Taiki**: Explained the mathematical background and motivations behind steerable convolutions and SO(3) equivariance. Investigated translational equivariance, elaborated on medical terms, and explained the Felzenswalb-Huttenlocher algorithm. Contributed to related work and the introduction sections, emphasizing the medical relevance of rotation robustness. Structured the repository and implemented reproducibility experiment configurations.
 
 ## Bibliography
 <a id="p1">[1]</a> Hu Cao, Yueyue Wang, Joy Chen, Dongsheng Jiang, Xiaopeng Zhang, Qi Tian, and Manning Wang. Swin-unet: Unet like pure transformer for medical image segmentation. In European conference on computer vision, pages 205–218. Springer, 2022.
