@@ -297,7 +297,7 @@ As mentioned in the previous section, a significant number of experiments cannot
 
 The results displayed in the first two columns show that our findings are approximately in line with those provided by the authors, with a few exceptions. A notable exception is our result for the liver tumor, which yielded a dice score of zero. The cause of this discrepancy is not entirely clear, but it is suspected to be due to corrupted data loading. Overall, the reproducibility experiment succeeds in validating the segmentation capabilities of the network.
 
-When considering the other results, ... (results to be included)
+When considering the other results, our attention focuses on the assertion from the researchers that a combination of bounding box (bbox) and text prompts enhances model performance the most. Our investigations align with this assertion, although the margin of is more modest. The table illustrates that the combination of bbox and text prompts yields an average Dice coefficient of 0.81, which is only marginally superior to the second-highest mean score of 0.80, achieved using solely the bbox prompt. However, it is imperative to acknowledge that our outcomes are derived from a limited testing scope using only five datasets due to computational restrictions, rather than a comprehensive evaluation across all available datasets. In conclusion however this experiment too succeeds in validating the claims of the original authors.
 
 
 ## Testing SegVol's geometric robustness
