@@ -442,7 +442,7 @@ The original ViT is pre-trained on 96,000 images and fine-tuned for 2000 epochs 
       <td><img src="figures/experiment_extension.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 9.</b></a></td>
+    <td colspan=2><b>Figure 9.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models.  </a></td>
   </tr>
 </table>
 
