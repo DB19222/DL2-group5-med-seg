@@ -22,18 +22,6 @@ Medical imaging has revolutionized the healthcare industry by enabling non-invas
 
 Image segmentation is the process of partitioning an image into meaningful segments, such as organs, tumors, or lesions. This is essential for numerous clinical applications, including surgical planning, disease monitoring and radiotherapy in cancer treatment, where it helps to minimize radiation damage to healthy tissues and maximize the dose to tumors. The primary goals in medical image segmentation are to achieve high accuracy, speed, and efficiency. Accurate segmentation ensures that clinicians can make precise assessments and decisions. Speed is vital for real-time applications, such as during surgical procedures or radiotherapy sessions where immediate adjustments may be needed. Efficiency encompasses the computational resources required, including memory and processing power, which is critical in clinical settings with limited hardware capabilities. Despite significant advancements, several challenges persist in medical image segmentation. The variability and complexity of anatomical structures, the presence of noise and artifacts in medical images, and the scarcity of annotated training data are key obstacles.
 
-Coordinate system in medical images:
-The coordinate system in medical imaging consists of mainly three three systems: the world, anatomical, and the medical image coordinate system as seen in figure 9. In our experiment, we manipulated the images by performing rotations along the Z-axis in the world coordinate system, i.e. rotating along the axial plane anatomical coordinate system or along the k axis in medical image coordinate system.
-
-<!-- <table align="center">
-  <tr align="center">
-      <td><img src="figures/Coordinate_sytems.png" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 9.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
-  </tr>
-</table> -->
-
 ### Related Work
 Before going into the details of SegVol, it is essential to explore existing research in the field of medical image segmentation. Traditional segmentation models often face challenges in accurately segmenting complex structures like tumors and cysts due to insufficient training data and a lack of ability to leverage spatial information from user interaction, which results in subpar performance [[9]](#p9). Moreover, many traditional methods utilize a sliding window approach for processing volumetric data, which is computationally expensive and inefficient, as it captures only local information without providing a comprehensive view of the entire volume. Recent adaptations of Segment Anything Model (SAM) for medical imaging have shown mixed results. SAM-Med2D [[2]](#p2) incorporates 2D adapters to process medical images slice-by-slice using SAM’s prompt-based segmentation approach, but it overlooks the 3D spatial context in volumetric data, leading to fragmented segmentation and missing inter-slice continuity. To address this, SAM-Med3D [[13]](#p13) extends SAM to directly operate on 3D volumetric data using 3D Vision Transformers (3D ViT), which capture detailed three-dimensional contexts and improve segmentation accuracy and robustness. However, SAM-Med3D’s high computational resource requirements present practical challenges for real-time clinical application. Other models have also made significant contributions to medical image segmentation. Swin-UNet [[1]](#p1) integrates Swin Transformers to achieve high-resolution segmentation outputs through a hierarchical architecture that processes images in non-overlapping local windows, shifting these windows across various layers to capture both local and global contexts. This multi-level feature representation produces detailed and precise segmentation maps. Similarly, UNETR [[7]](#p7) combines U-Net’s hierarchical feature extraction with Transformers' global context aggregation to capture long-range dependencies across slices, enhancing segmentation accuracy through multi-head self-attention mechanisms. CT-SAM3D [[6]](#p6) represents a further evolution by merging the strengths of transformers and convolutional layers in a U-shaped architecture, allowing for multi-scale feature extraction and fusion and addressing deficiencies in purely transformer-based approaches. The combination of local and global features in CT-SAM3D leads to superior performance across a wide range of medical imaging tasks, including SegVol. However, due to the absence of a public codebase, we decided to conduct our experiments on SegVol.
 
@@ -303,25 +291,36 @@ When considering the other results, our attention focuses on the assertion from 
 ## Testing SegVol's geometric robustness
 In clinical practice, a patient's positioning during imaging procedure often varies, introducing rotational differences in medical images. This variability can lead to inconsistencies in image segmentation. Such inconsistencies can be dangerous, especially in cancer treatment, where precise targeting is essential to minimize damage to healthy tissues while maximizing the radiation dose to unhealthy tissues. Given that bodies and organs may naturally move and rotate, these rotational differences can impact the accuracy and reliability of segmentation models. This is why it is crucial to assess and enhance the robustness of segmentation models like SegVol against such rotations. For real-time radiotherapy treatment planning, it is imperative to obtain real-time images of patients during treatment from the specific gantry where radiation is administered. This requires a rapid segmentation algorithm capable of processing images from that specific viewpoint. By utilizing a geometric-aware model, we can achieve real-time segmentation for various gantry angles, thereby advancing towards real-time radiotherapy with consistently precise segmentations. Therefore, enhancing SegVol’s rotation robustness is essential for improved model’s performance and clinical outcomes. 
 
-Since a medical imaging scan is typically taken by a scanning machine that rotates around the longitudinal axis of the patient, this is the main axis of rotation we consider when assessing the robustness of the architecture. An example of such a rotation is displayed in figure 6. 
+Regarding the coordinate system in medical images, it comprises three main systems: the world, anatomical, and medical image coordinate systems, as illustrated in Figure 6. In our experiment, we manipulated images by rotating them along the Z-axis in the world coordinate system, which corresponds to rotating along the axial plane anatomical coordinate system or along the k axis in the medical image coordinate system.
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/Coordinate_sytems.png" width=800></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 6.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
+  </tr>
+</table>
+
+Since a medical imaging scan is typically taken by a scanning machine that rotates around the longitudinal axis of the patient, this is the main axis of rotation we consider when assessing the robustness of the architecture. An example of such a rotation is displayed in figure 7. 
 
 <table align="center">
   <tr align="center">
       <td><img src="figures/rotate example.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 6.</b>Example of Rotation.</td>
+    <td colspan=2><b>Figure 7.</b>Example of Rotation.</td>
   </tr>
 </table>
 
-In our experiment, we rotate each volume 45 degrees around the longitudinal axis and 5.73 degrees (0.1 radian) around the other two axes. The results are subsequently compared to the performance of the same volumes in their original orientation. The experimental results are shown in Figure 7.
+In our experiment, we rotate each volume 45 degrees around the longitudinal axis and 5.73 degrees (0.1 radian) around the other two axes. The results are subsequently compared to the performance of the same volumes in their original orientation. The experimental results are shown in Figure 8.
 
 <table align="center">
   <tr align="center">
       <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 7.</b>Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
+    <td colspan=2><b>Figure 8.</b>Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
   </tr>
 </table>
 
@@ -367,7 +366,7 @@ Building on these ideas of efficient adaptation methods, we propose adjusting th
 
 To answer this research question, we will use a strategy similar to side-tuning, merging the output of the novel patch embeddings with the original frozen pre-trained patch embeddings using a feedforward layer to incorporate geometric information within the network. Since the patch embeddings are calculated and included at the lowest level of the foundation model, we hypothesize that the transformer blocks acting on the input sequence of patch embeddings must also be slightly adjusted to the altered input distribution. To address this problem, we propose injecting LoRA modules on top of the linear out-projection layers within each transformer block. This way, the transformer blocks can slightly adapt to the new input distribution as well.
 
-Some research has been done so far on making transformers equivariant. For instance, Xu et al [[18]](#p18). have done research on an E(2)-equivariant vision transformer. A different paper from Fuchs et al [[19]](#p19). shows a 3D Roto-Translation equivariant attention network however this is specifically tailored for point cloud data. Even though we cannot use exactly the same idea, this paper did give the global idea of bringing in equivariance on the low level features, with the hypothesis of making everything further downstream equivariant as well. As there is no further research so far on SO(3) equivariant ViTs we decided to build on this idea, bringing equivariance in the low level features in the adapter. In order to do so we decided to add a novel patch embedding which makes use of steering convolutions and who’s output simply concatenates to the original adapter’s output. Our hypothesis is then that this will not make the network fully equivariant as we still concatenate the old adapter as well as positional embeddings, but we do expect that this will bring in some degree of SO(3) equivariance.
+Some research has been done so far on making transformers equivariant. For instance, Xu et al. have done research on an E(2)-equivariant vision transformer. A different paper from Fuchs et al. shows a 3D Roto-Translation equivariant attention network however this is specifically tailored for point cloud data. Even though we cannot use exactly the same idea, this paper did give the global idea of bringing in equivariance on the low level features, with the hypothesis of making everything further downstream equivariant as well. As there is no further research so far on SO(3) equivariant ViTs we decided to build on this idea, bringing equivariance in the low level features in the adapter. In order to do so we decided to add a novel patch embedding which makes use of steering convolutions and who’s output simply concatenates to the original adapter’s output. Our hypothesis is then that this will not make the network fully equivariant as we still concatenate the old adapter as well as positional embeddings, but we do expect that this will bring in some degree of SO(3) equivariance.
 
 ## Method
 In this section, the method of our proposed adaptation technique will be explained. First, we will explain the choices made when creating the module with the induced rotational bias. Secondly, we will specify the choices made regarding the efficient adaptation of the foundation model SegVol.
@@ -377,13 +376,13 @@ For our experiments we have used a rotation equivariant steerable convolution in
 (Also see demo ./demos/SO3_patchembedding.ipynb)
 
 ### Adaptation Techniques
-An overview of our proposed adapted ViT is displayed in Figure 8.
+An overview of our proposed adapted ViT is displayed in Figure 9.
 <table align="center">
   <tr align="center">
       <td><img src="figures/new_architecture.jpg" width=500></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 8.</b> The proposed adapted Vision Transformer architecture.</a></td>
+    <td colspan=2><b>Figure 9.</b> The proposed adapted Vision Transformer architecture.</a></td>
   </tr>
 </table>
 
@@ -435,14 +434,14 @@ The table demonstrates the extent to which we reduced the number of trainable pa
 
 To assess how effectively our geometric adaptation technique can incorporate robustness to rotations, we conducted a series of experiments. First, we integrated our modules into the original SegVol model and continued training on the SegVol training set, updating our modules while keeping the original backbone frozen. Due to limited computational resources, further training on the entire dataset was not feasible. Therefore, we chose to train on the subset of five datasets also used in previous sections to reduce computational demands.
 
-The original ViT is pre-trained on 96,000 images and fine-tuned for 2000 epochs on the labeled datasets also used in this work. Given this extensive training, our adjustments are likely to significantly impact the model’s performance, and we might not observe convergence to the same performance range as the original ViT. Therefore, instead of comparing the absolute performance of SegVol and our method, we will examine the difference in performance on rotated versus normal input data. Additionally, we will train a baseline model with the same configuration as ours, but using a trainable standard patch embedding block instead of our proposed block. This baseline model will be trained using rotational augmentations on the training set, simulating a common strategy used to enhance robustness. The results of our experiments are shown in Figure 9.
+The original ViT is pre-trained on 96,000 images and fine-tuned for 2000 epochs on the labeled datasets also used in this work. Given this extensive training, our adjustments are likely to significantly impact the model’s performance, and we might not observe convergence to the same performance range as the original ViT. Therefore, instead of comparing the absolute performance of SegVol and our method, we will examine the difference in performance on rotated versus normal input data. Additionally, we will train a baseline model with the same configuration as ours, but using a trainable standard patch embedding block instead of our proposed block. This baseline model will be trained using rotational augmentations on the training set, simulating a common strategy used to enhance robustness. The results of our experiments are shown in Figure 10.
 
 <table align="center">
   <tr align="center">
       <td><img src="figures/experiment_extension.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 9.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models.  </a></td>
+    <td colspan=2><b>Figure 10.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models.  </a></td>
   </tr>
 </table>
 
@@ -501,16 +500,12 @@ Roan: Provided better explanations of plots, described all dataset components, c
 
 <a id="p17">[17]</a> Jeffrey O Zhang, Alexander Sax, Amir Zamir, Leonidas Guibas, and Jitendra Malik. Side-tuning: a baseline for network adaptation via additive side networks. In Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part III 16, pages 698–714. Springer, 2020. 
 
-<a id="p17">[18]</a> Xu, Renjun, Kaifan Yang, Ke Liu, and Fengxiang He. "$ E (2) $-Equivariant Vision Transformer." In Uncertainty in Artificial Intelligence, pp. 2356-2366. PMLR, 2023.
-
-<a id="p17">[19]</a> Fuchs, Fabian, Daniel Worrall, Volker Fischer, and Max Welling. "Se (3)-transformers: 3d roto-translation equivariant attention networks." Advances in neural information processing systems 33 (2020): 1970-1981.
-
 ## Appendix
 <table align="center">
   <tr align="center">
       <td><img src="figures/appendic_fig.jpg" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 15.</b></td>
+    <td colspan=2><b>Figure 11.</b></td>
   </tr>
 </table>
