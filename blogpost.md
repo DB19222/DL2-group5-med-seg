@@ -432,53 +432,26 @@ Table 3 gives an overview on the number of (trainable) parameters.
 The table demonstrates the extent to which we reduced the number of trainable parameters using our parameter-efficient adaptation techniques. This significant reduction of trainable parameters enables us to fine-tune the foundation model using the limited time and compute available to us.
 
 ##  Experiments
-⚠️***Note: We are still working on these.***
 
-As can be seen in table 1 with our adapted model is significantly worse in comparison with the SegVol baseline with regards to performance. This can probably be explained due to the limited training time that has been put into the model, as this was only 50 epoch. Our hypothesis is then that the distribution shift in the input is not fully learned yet by the model. This persists in all experiments with the different prompts, text and bounding box, bounding box, point and text and point prompts.
+To assess how effectively our geometric adaptation technique can incorporate robustness to rotations, we conducted a series of experiments. First, we integrated our modules into the original SegVol model and continued training on the SegVol training set, updating our modules while keeping the original backbone frozen. Due to limited computational resources, further training on the entire dataset was not feasible. Therefore, we chose to train on the subset of five datasets also used in previous sections to reduce computational demands.
 
-In the first plot using both text and bounding box prompts we can see that, though our adapted fine-tuned model is performing significantly worse compared to the SegVol baseline, if we compare SegVol on rotated with non rotated data it loses on average 0.08 dice score. Whereas our baseline actually improves on average when facing it with rotated data by 0.01 on average.
-
-<table align="center">
-  <tr align="center">
-      <td><img src="figures/exp1 our with title.jpg" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 10.</b></a></td>
-  </tr>
-</table>
-
-In the second plot results are shown using solely bounding box prompts. Here we see a fairly similar pattern where again, the SegVol model is performing better but loses on average 0.11 dice on rotated data. Where our adapted model has no significant loss or improvement.
+The original ViT is pre-trained on 96,000 images and fine-tuned for 2000 epochs on the labeled datasets also used in this work. Given this extensive training, our adjustments are likely to significantly impact the model’s performance, and we might not observe convergence to the same performance range as the original ViT. Therefore, instead of comparing the absolute performance of SegVol and our method, we will examine the difference in performance on rotated versus normal input data. Additionally, we will train a baseline model with the same configuration as ours, but using a trainable standard patch embedding block instead of our proposed block. This baseline model will be trained using rotational augmentations on the training set, simulating a common strategy used to enhance robustness. The results of our experiments are shown in Figure 9.
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/exp2 our.jpg" width=800></td>
+      <td><img src="figures/experiment_extension.png" width=800></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 11.</b></a></td>
+    <td colspan=2><b>Figure 9.</b></a></td>
   </tr>
 </table>
 
-For the third experiment where both text and point prompts are used an interesting trend may be observed. 
+The figure presents the results of our experiment comparing the baseline model configuration trained for 30 epochs with our proposed model trained for 25 epochs. The results confirm our theory that the adapted models are not able to match the original model's performance, but they still offer some noteworthy insights. Both rotational robustness-enhancing methods exhibit similar performance on rotated and non-rotated images across all prompts. Interestingly, our proposed method achieves comparable performance to the baseline model while being trained for 17 percent fewer epochs. This finding supports the theory that group equivariant techniques enhance data efficiency compared to traditional methods like data augmentation. Despite these promising observations, it is important to note that the results are preliminary, and it is not clear whether these observations hold when scaling this method. Alltogether, we find these results promising and the idea of geometric adaption intriguing, motivating us to look into this further. 
 
-<table align="center">
-  <tr align="center">
-      <td><img src="figures/exp3 our.jpg" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 12.</b></a></td>
-  </tr>
-</table>
-
-<table align="center">
-  <tr align="center">
-      <td><img src="figures/exp4 our.jpg" width=800></td>
-  </tr>
-  <tr align="left">
-    <td colspan=2><b>Figure 13.</b></a></td>
-  </tr>
-</table>
 
 ## Concluding Remarks
+
+_Future Work : _ More data, more epochs, and hyperparameter search when performing this “geometric fine-tuning”. Also, due to the way the Monai ViT was implemented, the out-projection was the most straightforward to use for LoRA-adapter injections, however research has proven the Query and Value matrices in the self-attention block yield best performance when adapted using LoRA. Rewriting the adapted ViT architecture to enable this is a promising future research direction. Additionally, future research can investigate whether increasing the level up to which features are equivariant can further improve robustness.  
 
 
 ## Work load
