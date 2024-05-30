@@ -88,7 +88,7 @@ A violin plot combines elements of a box plot and a density plot to show data di
 
 <table align="center">
   <tr align="center">
-      <td><img id="exp-1-a" src="figures/Experiment_1_a.png" width=800></td>
+      <td><img id="exp-1-a" src="figures/Experiment_1_a.png" width=1000></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 2.</b> Violin plots for comparing experiment results of SegVol and task-specific methods. The vertical axis shows the Dice score <a href="#p4">[4]</a>.</td>
@@ -103,7 +103,7 @@ To determine the optimal prompt configuration, and to validate the claim that th
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/Experiment_4_a.png" width=800></td>
+      <td><img src="figures/Experiment_4_a.png" width=1000></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 5.</b> The quantitative experimental results on 19 internal tasks demonstrate that jointly using semantic and spatial prompts can achieve better performances <a href="#p4">[4]</a>.</td>
@@ -119,168 +119,166 @@ In this section we will assess the capabilities of the SegVol architecture. Firs
 As mentioned in the previous section, a significant number of experiments cannot be reproduced due to the incompleteness of the datasets provided by the authors. However, the datasets for experiment one are fully available, making this a suitable experiment to assess and validate the claimed performance of the SegVol architecture. These datasets include  [BTCV](https://www.synapse.org/#!Synapse:syn3193805/wiki/217753) and [MSD-spleen](http://medicaldecathlon.com/) datasets, which focus on organ segmentation, and from [MSD-lung](http://medicaldecathlon.com/), [MSD-Colon](http://medicaldecathlon.com/), and [MSD-Liver](http://medicaldecathlon.com/) datasets, which focus on lesion segmentation.  Additionally, we perform extensive analysis on the different prompting configurations to validate the authors' claim that the joint use of spatial and semantic prompts positively impacts performance. Due to limited computational resources, we decided to validate the impact of the prompting configurations on the same subset of five datasets. The results of these reproducibility experiments are shown in Table 2. 
 
 <div align="center">
-
   <table>
     <caption><b>Table 2: </b>Results for reproducing Experiment 1</caption>
     <thead>
       <tr>
-        <th>Category</th>
-        <th>SegVol BBox+text (Paper Exp. 1)</th>
-        <th>SegVol BBox+text (Ours)</th>
-        <th>SegVol BBox (Ours)</th>
-        <th>SegVol Point+text (Ours)</th>
-        <th>SegVol Point (Ours)</th>
-        <th>SegVol text (Ours)</th>
+        <th align="left">Category</th>
+        <th align="center">SegVol BBox+text (Paper Exp. 1)</th>
+        <th align="center">SegVol BBox+text (Ours)</th>
+        <th align="center">SegVol BBox (Ours)</th>
+        <th align="center">SegVol Point+text (Ours)</th>
+        <th align="center">SegVol Point (Ours)</th>
+        <th align="center">SegVol text (Ours)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Aorta</td>
-        <td>0.92</td>
-        <td>0.91</td>
-        <th>0.91</th>
-        <th>0.90</th>
-        <th>0.91</th>
-        <th>0.90</th>
+        <td align="left">Aorta</td>
+        <td align="center">0.92</td>
+        <td align="center">0.91</td>
+        <td align="center">0.91</td>
+        <td align="center">0.90</td>
+        <td align="center">0.91</td>
+        <td align="center">0.90</td>
       </tr>
       <tr>
-        <td>Colon cancer</td>
-        <td>0.76</td>
-        <td>0.67</td>
-        <th>0.66</th>
-        <th>0.66</th>
-        <th>0.61</th>
-        <th>0.26</th>
+        <td align="left">Colon cancer</td>
+        <td align="center">0.76</td>
+        <td align="center">0.67</td>
+        <td align="center">0.66</td>
+        <td align="center">0.66</td>
+        <td align="center">0.61</td>
+        <td align="center">0.26</td>
       </tr>
       <tr>
-        <td>Esophagus</td>
-        <td>0.74</td>
-        <td>0.71</td>
-        <th>0.69</th>
-        <th>0.65</th>
-        <th>0.69</th>
-        <th>0.74</th>
+        <td align="left">Esophagus</td>
+        <td align="center">0.74</td>
+        <td align="center">0.71</td>
+        <td align="center">0.69</td>
+        <td align="center">0.65</td>
+        <td align="center">0.69</td>
+        <td align="center">0.74</td>
       </tr>
       <tr>
-        <td>Gallbladder</td>
-        <td>0.86</td>
-        <td>0.75</td>
-        <th>0.74</th>
-        <th>0.60</th>
-        <th>0.61</th>
-        <th>0.70</th>
+        <td align="left">Gallbladder</td>
+        <td align="center">0.86</td>
+        <td align="center">0.75</td>
+        <td align="center">0.74</td>
+        <td align="center">0.60</td>
+        <td align="center">0.61</td>
+        <td align="center">0.70</td>
       </tr>
       <tr>
-        <td>Inferior vena cava</td>
-        <td>0.83</td>
-        <td>0.83</td>
-        <th>0.82</th>
-        <th>0.82</th>
-        <th>0.83</th>
-        <th>0.83</th>
+        <td align="left">Inferior vena cava</td>
+        <td align="center">0.83</td>
+        <td align="center">0.83</td>
+        <td align="center">0.82</td>
+        <td align="center">0.82</td>
+        <td align="center">0.83</td>
+        <td align="center">0.83</td>
       </tr>
       <tr>
-        <td>Left adrenal gland</td>
-        <td>0.76</td>
-        <td>0.72</td>
-        <th>0.72</th>
-        <th>0.49</th>
-        <th>0.54</th>
-        <th>0.58</th>
+        <td align="left">Left adrenal gland</td>
+        <td align="center">0.76</td>
+        <td align="center">0.72</td>
+        <td align="center">0.72</td>
+        <td align="center">0.49</td>
+        <td align="center">0.54</td>
+        <td align="center">0.58</td>
       </tr>
       <tr>
-        <td>Left kidney</td>
-        <td>0.93</td>
-        <td>0.93</td>
-        <th>0.93</th>
-        <th>0.93</th>
-        <th>0.87</th>
-        <th>0.93</th>
+        <td align="left">Left kidney</td>
+        <td align="center">0.93</td>
+        <td align="center">0.93</td>
+        <td align="center">0.93</td>
+        <td align="center">0.93</td>
+        <td align="center">0.87</td>
+        <td align="center">0.93</td>
       </tr>
       <tr>
-        <td>Liver</td>
-        <td>0.96</td>
-        <td>0.96</td>
-        <th>0.93</th>
-        <th>0.96</th>
-        <th>0.85</th>
-        <th>0.96</th>
+        <td align="left">Liver</td>
+        <td align="center">0.96</td>
+        <td align="center">0.96</td>
+        <td align="center">0.93</td>
+        <td align="center">0.96</td>
+        <td align="center">0.85</td>
+        <td align="center">0.96</td>
       </tr>
       <tr>
-        <td>Lung tumor</td>
-        <td>0.73</td>
-        <td>0.70</td>
-        <th>0.69</th>
-        <th>0.63</th>
-        <th>0.67</th>
-        <th>0.36</th>
+        <td align="left">Lung tumor</td>
+        <td align="center">0.73</td>
+        <td align="center">0.70</td>
+        <td align="center">0.69</td>
+        <td align="center">0.63</td>
+        <td align="center">0.67</td>
+        <td align="center">0.36</td>
       </tr>
       <tr>
-        <td>Pancreas</td>
-        <td>0.85</td>
-        <td>0.82</td>
-        <th>0.83</th>
-        <th>0.79</th>
-        <th>0.72</th>
-        <th>0.81</th>
+        <td align="left">Pancreas</td>
+        <td align="center">0.85</td>
+        <td align="center">0.82</td>
+        <td align="center">0.83</td>
+        <td align="center">0.79</td>
+        <td align="center">0.72</td>
+        <td align="center">0.81</td>
       </tr>
       <tr>
-        <td>Portal/splenic vein</td>
-        <td>0.72</td>
-        <td>0.74</td>
-        <th>0.60</th>
-        <th>0.64</th>
-        <th>0.50</th>
-        <th>0.72</th>
+        <td align="left">Portal/splenic vein</td>
+        <td align="center">0.72</td>
+        <td align="center">0.74</td>
+        <td align="center">0.60</td>
+        <td align="center">0.64</td>
+        <td align="center">0.50</td>
+        <td align="center">0.72</td>
       </tr>
       <tr>
-        <td>Right adrenal gland</td>
-        <td>0.66</td>
-        <td>0.67</td>
-        <th>0.67</th>
-        <th>0.45</th>
-        <th>0.44</th>
-        <th>0.61</th>
+        <td align="left">Right adrenal gland</td>
+        <td align="center">0.66</td>
+        <td align="center">0.67</td>
+        <td align="center">0.67</td>
+        <td align="center">0.45</td>
+        <td align="center">0.44</td>
+        <td align="center">0.61</td>
       </tr>
       <tr>
-        <td>Right kidney</td>
-        <td>0.92</td>
-        <td>0.92</td>
-        <th>0.92</th>
-        <th>0.92</th>
-        <th>0.69</th>
-        <th>0.92</th>
+        <td align="left">Right kidney</td>
+        <td align="center">0.92</td>
+        <td align="center">0.92</td>
+        <td align="center">0.92</td>
+        <td align="center">0.92</td>
+        <td align="center">0.69</td>
+        <td align="center">0.92</td>
       </tr>
       <tr>
-        <td>Spleen</td>
-        <td>0.96</td>
-        <td>0.96</td>
-        <th>0.96</th>
-        <th>0.96</th>
-        <th>0.93</th>
-        <th>0.96</th>
+        <td align="left">Spleen</td>
+        <td align="center">0.96</td>
+        <td align="center">0.96</td>
+        <td align="center">0.96</td>
+        <td align="center">0.96</td>
+        <td align="center">0.93</td>
+        <td align="center">0.96</td>
       </tr>
       <tr>
-        <td>Stomach</td>
-        <td>0.92</td>
-        <td>0.91</td>
-        <th>0.89</th>
-        <th>0.87</th>
-        <th>0.77</th>
-        <th>0.91</th>
+        <td align="left">Stomach</td>
+        <td align="center">0.92</td>
+        <td align="center">0.91</td>
+        <td align="center">0.89</td>
+        <td align="center">0.87</td>
+        <td align="center">0.77</td>
+        <td align="center">0.91</td>
       </tr>
-       <tr>
-        <td>Average</td>
-        <td>0.83</td>
-        <td>0.81</td>
-        <th>0.80</th>
-        <th>0.75</th>
-        <th>0.70</th>
-        <th>0.75</th>
+      <tr>
+        <td align="left">Average</td>
+        <td align="center">0.83</td>
+        <td align="center">0.81</td>
+        <td align="center">0.80</td>
+        <td align="center">0.75</td>
+        <td align="center">0.70</td>
+        <td align="center">0.75</td>
       </tr>
     </tbody>
   </table>
-
 </div>
 
 The results displayed in the first two columns show that our findings are approximately in line with those provided by the authors, with a few exceptions. A notable exception is our result for the liver tumor, which yielded a dice score of zero. The cause of this discrepancy is not entirely clear, but it is suspected to be due to corrupted data loading. Overall, the reproducibility experiment succeeds in validating the segmentation capabilities of the network.
@@ -295,10 +293,11 @@ Regarding the coordinate system in medical images, it comprises three main syste
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/Coordinate_sytems.png" width=800></td>
+      <td><img src="figures/Coordinate_sytems.png" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 6.</b> Coordinate systems in medical imaging. From left we have a visualization of world, anatomical, and the medical image coordinate system.</td>
+    <td colspan=2><b>Figure 6.</b> Coordinate systems in medical imaging. From left to right, we have a visualization of world, anatomical, and the medical image coordinate system.</td>
+    
   </tr>
 </table>
 
@@ -306,10 +305,10 @@ Since a medical imaging scan is typically taken by a scanning machine that rotat
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/rotate example.jpg" width=800></td>
+      <td><img src="figures/rotate example.jpg" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 7.</b>Example of Rotation.</td>
+    <td colspan=2><b>Figure 7.</b>Example of a Rotation on a 3D CT scan. The left image shows the original scan, the right image shows the scan after a 45 degree rotation around the longitudinal axis.
   </tr>
 </table>
 
@@ -317,7 +316,7 @@ In our experiment, we rotate each volume 45 degrees around the longitudinal axis
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png" width=800></td>
+      <td><img src="figures/Screenshot 2024-05-28 at 17.47.31.png" width=1000></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 8.</b>Mean Dice Score for each organ using both spatial and semantic prompts on rotated and normal data.</td>
@@ -343,7 +342,7 @@ So far, we gave a comprehensive explanation of SegVol’s paper. In this section
 3. Computational demands: The use of transformer-based architectures and large-scale models introduces substantial computational requirements, which can be a barrier to clinical adoption, especially in resource-constrained settings.
 
 #### Potential for Improvement:
-1. **Enhanced Robustness through Equivariance**: Addressing the robustness issues, particularly regarding rotations and translations, is critical. Incorporating techniques such as group equivariant convolutions can help in creating low-level features that are inherently invariant to these transformations. This improvement would make the model more reliable in varying clinical scenarios, such as different patient positions or imaging protocols.
+1. **Enhanced robustness through Equivariance**: Addressing the robustness issues, particularly regarding rotations and translations, is critical. Incorporating techniques such as group equivariant convolutions can help in creating low-level features that are inherently invariant to these transformations. This improvement would make the model more reliable in varying clinical scenarios, such as different patient positions or imaging protocols.
 
 ## Our Novel Contribution
 ### Quick recap on SO(3)-Convolution
@@ -351,7 +350,7 @@ Group equivariant convolutional neural networks (GCNNs) further enhance classica
 
 We will be using the ESCNN (Enhanced Steerable CNN) library to implement steering convolutions. This library allows for several isometries like rotations and reflections in both 2D and 3D spaces. We chose to use steerable CNNs as we have the need for infinite groups such as 3D rotations, where memory utilization is already significant due to the nature of the data. In ESCNN, equivariant convolutions are achieved through utilizing feature maps of E(n)-equivariant steerable CNNs called feature fields, which transform predictably under operations like rotations and reflections. These feature fields can be scalar (like in gray-scale images) or n-dimensional vector fields, each transforming differently under such operations. Users can define input and output feature spaces for convolutions and create mappings similar to traditional convolutions, but with the added capability of handling group symmetries, thus facilitating the adoption of steerable convolutions into deep learning models.
 
-##  Proposed Innovation/Solution
+### Proposed Innovation
 Previous sections have highlighted the importance of robustness to rotations in medical imaging architectures. We have assessed the robustness of the medical segmentation foundation model, SegVol, and have demonstrated discrepancies in segmentation performance between volumes rotated 45 degrees and those that are not. This finding motivated us to investigate possible improvements.
 
 The Vision Transformer (ViT) used as the image encoder in the SegVol network was trained on 96,000 CT-scan images for 2,000 epochs, a significant computational effort that we cannot replicate due to dataset unavailability and limited computational resources. Consequently, we must consider more efficient adaptation methods.
@@ -376,59 +375,54 @@ For our experiments we have used a rotation equivariant steerable convolution in
 (Also see demo ./demos/SO3_patchembedding.ipynb)
 
 ### Adaptation Techniques
-An overview of our proposed adapted ViT is displayed in Figure 9.
+Similar to side-tuning, we deploy our patch embedding block with the induced rotational bias jointly with the original pre-trained patch embedding module. We decided to use this strategy because we wanted to use the pre-trained weights of the extensively trained, frozen patch-embedding block, and also avoid removing the original input signal entirely. However, this results in an input sequence consisting of significantly more block embeddings compared to the original model. To ensure the sequence size matches that of the original architecture, we concatenate the two sequences of block embeddings and map them to a dimensionality compatible with the original architecture using an adapter consisting of a feedforward neural network. This contrasts with the side-tuning architecture [[17]](#p17), where the outputs of two networks are merged using a gating mechanism. An overview of our proposed adapted ViT is displayed in Figure 9.
+
 <table align="center">
   <tr align="center">
-      <td><img src="figures/new_architecture.jpg" width=500></td>
+      <td><img src="figures/new_architecture.jpg" width=300></td>
   </tr>
   <tr align="left">
     <td colspan=2><b>Figure 9.</b> The proposed adapted Vision Transformer architecture.</a></td>
   </tr>
 </table>
 
-Similar to side-tuning, we deploy our patch embedding block with the induced rotational bias jointly with the original pre-trained patch embedding module. We decided to use this strategy because we wanted to use the pre-trained weights of the extensively trained, frozen patch-embedding block, and also avoid removing the original input signal entirely. However, this results in an input sequence consisting of significantly more block embeddings compared to the original model. To ensure the sequence size matches that of the original architecture, we concatenate the two sequences of block embeddings and map them to a dimensionality compatible with the original architecture using an adapter consisting of a feedforward neural network. This contrasts with the side-tuning architecture [[17]](#p17), where the outputs of two networks are merged using a gating mechanism.
-
 We hypothesize that the transformer blocks need to slightly adjust their weights to adapt to the different input data. To incorporate this into our network, we draw inspiration from the MeLO architecture [[16]](#p16), which was briefly mentioned previously. MeLO demonstrated that LoRA is a suitable adaptation technique when adapting Vision Transformers in the medical imaging domain.
 
-Table 3 gives an overview on the number of (trainable) parameters.
+Table 3 gives an overview on the number of (trainable) parameters. This table demonstrates the extent to which we reduced the number of trainable parameters using our parameter-efficient adaptation techniques. This significant reduction of trainable parameters enables us to fine-tune the foundation model using the limited time and compute available to us.
 
 <div align="center">
-
   <table>
     <caption><b>Table 3:</b> Overview of parameter counts.</caption>
     <thead>
       <tr>
-        <th></th>
-        <th>Total</th>
-        <th>Trainable</th>
-        <th>%trainable</th>
+        <th align="left"></th>
+        <th align="center">Total</th>
+        <th align="center">Trainable</th>
+        <th align="center">%trainable</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Original ViT</td>
-        <td>85.8M</td>
-        <td>85.8M</td>
-        <td>100</td>
+        <td align="left">Original ViT</td>
+        <td align="center">85.8M</td>
+        <td align="center">85.8M</td>
+        <td align="center">100</td>
       </tr>
       <tr>
-        <td>Proposed ViT excl LoRA</td>
-        <td>90.4M</td>
-        <td>4.6M</td>
-        <td>5.1</td>
+        <td align="left">Proposed ViT excl LoRA</td>
+        <td align="center">90.4M</td>
+        <td align="center">4.6M</td>
+        <td align="center">5.1</td>
       </tr>
       <tr>
-        <td>Proposed ViT incl LoRA</td>
-        <td>90.7M</td>
-        <td>4.9M</td>
-        <td>5.4</td>
+        <td align="left">Proposed ViT incl LoRA</td>
+        <td align="center">90.7M</td>
+        <td align="center">4.9M</td>
+        <td align="center">5.4</td>
       </tr>
     </tbody>
   </table>
-
 </div>
-
-The table demonstrates the extent to which we reduced the number of trainable parameters using our parameter-efficient adaptation techniques. This significant reduction of trainable parameters enables us to fine-tune the foundation model using the limited time and compute available to us.
 
 ##  Experiments
 
@@ -438,15 +432,15 @@ The original ViT is pre-trained on 96,000 images and fine-tuned for 2000 epochs 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/experiment_extension.png" width=800></td>
+      <td><img src="figures/dice_scores_per_prompt_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 10.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models.  </a></td>
+    <td colspan=2><b>Figure 10.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models. The origal SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs. 
+      </a></td>
   </tr>
 </table>
 
 The figure presents the results of our experiment comparing the baseline model configuration trained for 30 epochs with our proposed model trained for 25 epochs. The results confirm our theory that the adapted models are not able to match the original model's performance, but they still offer some noteworthy insights. Both rotational robustness-enhancing methods exhibit similar performance on rotated and non-rotated images across all prompts. Interestingly, our proposed method achieves comparable performance to the baseline model while being trained for 17 percent fewer epochs on data without rotations. This finding supports the theory that group equivariant techniques enhance data efficiency compared to traditional methods like data augmentation. Despite these promising observations, it is important to note that the results are preliminary, and it is not clear whether these observations hold when scaling this method. Alltogether, we find these results promising and the idea of geometric adaptation intriguing, motivating us to look into this further. 
-
 
 ## Concluding Remarks
 In summary, our investigative work on replication supports both the claimed model performance, as well as the claim that superior performance of SegVol is achieved utilizing both spatial and semantic prompts. Furthermore, our assessment of the model's robustness reveals that, while it achieves impressive state-of-the-art outcomes, its robustness against rotational variations is not absolute. This finding serves as a cautionary note for fellow researchers to consider resilience to rotation in their model evaluations.
@@ -455,7 +449,7 @@ Turning to our own novel contribution, we can conclude that steering convolution
 
 For future research we then strongly encourage a further exploration of this particular innovation. Future studies should encompass more data, extended training durations, as well as hyperparameter search when performing this “geometric fine-tuning”. Additionally, due to the way the Monai ViT was implemented, the out-projection was the most straightforward to use for LoRA-adapter injections, however research has proven the Query and Value matrices in the self-attention block yield best performance when adapted using LoRA. Rewriting the adapted ViT architecture to enable this is a promising future research direction. Additionally, future research can investigate whether increasing the level up to which features are equivariant can further improve robustness.
 
-## Work load
+## Authors' Contributions
 Danny: Contributed to the overall blog post, implemented the SO(3) patch embedding block, and assisted with the inference pipeline. Developed the proposed adaptation technique, helped refine the experimental setup, and assisted with the initial implementation of the transformer-based architecture.
 
 Taiki: Explained the mathematical background and motivations behind steerable convolutions and SO(3) equivariance. Investigated translational equivariance, elaborated on medical terms, and explained the Felzenswalb-Huttenlocher algorithm. Made references clickable and contributed to related work and the introduction sections, emphasizing the medical relevance of rotation robustness. Structured the repository and implemented reproducibility experiment configurations.
@@ -465,7 +459,7 @@ Jesse: Designed the proposed architecture, and contributed motivations behind hy
 Roan: Provided better explanations of plots, described all dataset components, combined the original experiments with the reproduction section, and defined and tested the z-axis accuracy. Evaluated plots, adjusted the inference pipeline, and facilitated the dataset solution on Snellius with Jesse and Taiki. Executed experiments and produced visualizations and analyses for "Reproduction of the Experiments."
 
 
-## References
+## Bibliography
 <a id="p1">[1]</a> Hu Cao, Yueyue Wang, Joy Chen, Dongsheng Jiang, Xiaopeng Zhang, Qi Tian, and Manning Wang. Swin-unet: Unet like pure transformer for medical image segmentation. In European conference on computer vision, pages 205–218. Springer, 2022.
 
 <a id="p2">[2]</a> Junlong Cheng, Jin Ye, Zhongying Deng, Jianpin Chen, Tianbin Li, Haoyu Wang, Yanzhou Su, Ziyan Huang, Jilong Chen, Lei Jiang, et al. Sam-med2d. arXiv preprint arXiv:2308.16184, 2023.
@@ -501,11 +495,52 @@ Roan: Provided better explanations of plots, described all dataset components, c
 <a id="p17">[17]</a> Jeffrey O Zhang, Alexander Sax, Amir Zamir, Leonidas Guibas, and Jitendra Malik. Side-tuning: a baseline for network adaptation via additive side networks. In Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part III 16, pages 698–714. Springer, 2020. 
 
 ## Appendix
+
+The appendix contains additional figures that provide further insights into the experiments and results discussed in the main text. Figure 11 displays the distribution of dice scores for each organ across the five datasets, comparing the original SegVol model with the fine-tuned model. Figures 12-15 present the mean dice scores across all organs for different prompts, comparing the original SegVol model with the two fine-tuned models. These figures provide a more detailed view of the performance of the models across different prompts.
+
 <table align="center">
   <tr align="center">
-      <td><img src="figures/appendic_fig.jpg" width=800></td>
+      <td><img src="figures/appendic_fig.jpg" width=1000></td>
   </tr>
   <tr align="left">
-    <td colspan=2><b>Figure 11.</b></td>
-  </tr>
+    <td colspan=2><b>Figure 11.</b> Boxplots of each organ's dice score for the models. The boxplots show the distribution of dice scores for each organ across the five datasets. The whiskers represent the minimum and maximum values, the box represents the interquartile range, and the line inside the box represents the median. The original SegVol model was trained for 2000 epochs, the fine-tuned model with the Group Equivariant Patch Embeddings was trained for 25 epochs.
+      </a></td>
 </table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/experiment_1_dice_scores_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 12.</b> Mean dice score across all organs for text and bounding box prompts considering SegVol and the two fine-tuned models. The original SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs.
+      </a></td>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/experiment_2_dice_scores_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 13.</b> Mean dice score across all organs for bounding box prompts considering SegVol and the two fine-tuned models. The original SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs.
+      </a></td>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/experiment_3_dice_scores_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 14.</b> Mean dice score across all organs for point and text prompts considering SegVol and the two fine-tuned models. The original SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs.
+      </a></td>
+</table>
+
+<table align="center">
+  <tr align="center">
+      <td><img src="figures/experiment_4_dice_scores_SegVol_baseline_30_epochs_ft_25_epochs.png" width=1000></td>
+  </tr>
+  <tr align="left">
+    <td colspan=2><b>Figure 15.</b> Mean dice score across all organs for point prompts considering SegVol and the two fine-tuned models. The original SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs.
+      </a></td>
+</table>
+
+      
