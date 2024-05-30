@@ -96,7 +96,7 @@ After determining that there exists room for improvement in terms of robustness 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/mean_dice_scores_for_each_organ_combined.png" width=800></td>
+      <td><img src="figures/experiment_extension.png" width=800></td>
   </tr>
   <tr align="center">
     <td colspan=2><b>Figure 1.</b> Difference in mean Dice scores in detail for each organ.</td>
