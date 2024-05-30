@@ -28,20 +28,21 @@ git clone https://github.com/DB19222/DL2-group5-med-seg.git
 
 To install requirements and activate environment, take a look at our `setup_environment.md` walkthrough!
 
+## Dataset
+
+The dataset used in this project is the [M3D-Seg](https://huggingface.co/datasets/GoodBaiBai88/M3D-Seg) dataset. The dataset can be downloaded from huggingface and can be used to train and evaluate the model. The dataset contains 3D medical images and their corresponding segmentation masks. The dataset is divided into training and validation sets.
 
 ## Training and Inference
 ### Training
 You can train/fine-tune the SegVol model, with or without our proposed ViT, using the following script:
 ```train
 sbatch ./scripts/DL2_train.job
-
 ```
 
 ### Inference
 You can reproduce our experimental  the SegVol model using the following script:
 ```inference
 sbatch ./scripts/DL2_evaluation.job
-
 ```
 ## Demo
 
@@ -67,24 +68,24 @@ The results of the reproduction experiments where we evaluate inference performa
     <caption><b>Table 2: </b>Results for reproducing Experiment 1</caption>
     <thead>
       <tr>
-        <th></th>
-        <th>SegVol BBox+text (Paper Exp. 1)</th>
-        <th>SegVol BBox+text (Ours)</th>
-        <th>SegVol BBox (Ours)</th>
-        <th>SegVol Point+text (Ours)</th>
-        <th>SegVol Point (Ours)</th>
-        <th>SegVol text (Ours)</th>
+        <th align="center"></th>
+        <th align="center">SegVol BBox+text (Paper Exp. 1)</th>
+        <th align="center">SegVol BBox+text (Ours)</th>
+        <th align="center">SegVol BBox (Ours)</th>
+        <th align="center">SegVol Point+text (Ours)</th>
+        <th align="center">SegVol Point (Ours)</th>
+        <th align="center">SegVol text (Ours)</th>
       </tr>
     </thead>
     <tbody>
-       <tr>
-        <td>Average dice score</td>
-        <td>0.83</td>
-        <td>0.81</td>
-        <th>0.80</th>
-        <th>0.75</th>
-        <th>0.70</th>
-        <th>0.75</th>
+      <tr>
+        <td align="center">Mean dice score</td>
+        <td align="center">0.83</td>
+        <td align="center">0.81</td>
+        <td align="center">0.80</td>
+        <td align="center">0.75</td>
+        <td align="center">0.70</td>
+        <td align="center">0.75</td>
       </tr>
     </tbody>
   </table>
@@ -96,14 +97,12 @@ After determining that there exists room for improvement in terms of robustness 
 
 <table align="center">
   <tr align="center">
-      <td><img src="figures/experiment_extension.png" width=800></td>
+      <td><img src="figures/dice_scores_per_prompt_SegVol_baseline_30_epochs_ft_25_epochs.png" width=800></td>
   </tr>
-  <tr align="center">
-    <td colspan=2><b>Figure 1.</b> Difference in mean Dice scores in detail for each organ.</td>
+  <tr align="left">
+    <td colspan=2><b>Figure 1.</b> Mean dice score across all organs for the different prompt types considering SegVol and the two adapted models. The origal SegVol model was trained for 2000 epochs, the fine-tuned model without Group Equivariant Patch Embeddings was trained for 30 epochs and the model with the Group Equivariant Patch Embeddings was trained for 25 epochs. </td>
   </tr>
 </table>
-
----
 
 ## Snellius Compute Cluster Reproduction Instructions
 
